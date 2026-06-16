@@ -108,10 +108,12 @@
             <p class="mt-2 text-3xl font-semibold text-slate-400">—</p>
             <p class="text-xs text-slate-400">Coming in Phase 5</p>
         </x-ui.card>
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Open Deals</p>
-            <p class="mt-2 text-3xl font-semibold text-slate-400">—</p>
-            <p class="text-xs text-slate-400">Coming in Phase 4</p>
-        </x-ui.card>
+        <a href="{{ route('deals.index') }}" class="block">
+            <x-ui.card class="hover:border-brand-300 transition">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Open Deals</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ $openDeals }}</p>
+                <p class="text-xs text-slate-500 mt-1">${{ number_format($pipelineValue, 0) }} pipeline</p>
+            </x-ui.card>
+        </a>
     </div>
 </div>

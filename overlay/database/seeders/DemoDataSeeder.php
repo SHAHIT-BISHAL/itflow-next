@@ -10,6 +10,10 @@ use App\Models\Document;
 use App\Models\Domain;
 use App\Models\Location;
 use App\Models\Password;
+use App\Models\Activity;
+use App\Models\Deal;
+use App\Models\Pipeline;
+use App\Models\PipelineStage;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -75,7 +79,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // Phase 2 — IT Documentation demo data
-        Asset::create([
+        $server = Asset::create([
             'company_id'   => $company->id,
             'client_id'    => $client->id,
             'location_id'  => $location->id,
@@ -136,7 +140,7 @@ class DemoDataSeeder extends Seeder
             'notes'      => 'Shared M365 global admin account.',
         ]);
 
-        Domain::create([
+        $domain = Domain::create([
             'company_id'    => $company->id,
             'client_id'     => $client->id,
             'name'          => 'acme.example.com',
@@ -160,6 +164,34 @@ class DemoDataSeeder extends Seeder
             'ssl_expires_at' => now()->addDays(90)->toDateString(),
             'ssl_issuer'    => 'DigiCert',
         ]);
+
+        Document::where('client_id', $client->id)->each(function (Document $document) use ($admin, $server, $domain) {
+            $document->update([
+                'document_type' => str($document->title)->contains('Network') ? 'network' : 'runbook',
+                'review_due_at' => now()->addMonths(3)->toDateString(),
+            ]);
+
+            $document->versions()->create([
+                'created_by' => $admin->id,
+                'version_number' => 1,
+                'title' => $document->title,
+                'content' => $document->content,
+                'change_summary' => 'Initial seeded version',
+            ]);
+
+            if (str($document->title)->contains('Network')) {
+                $document->relations()->create([
+                    'related_type' => Asset::class,
+                    'related_id' => $server->id,
+                    'relationship_type' => 'reference',
+                ]);
+                $document->relations()->create([
+                    'related_type' => Domain::class,
+                    'related_id' => $domain->id,
+                    'relationship_type' => 'reference',
+                ]);
+            }
+        });
 
         Client::create([
             'company_id' => $company->id,
@@ -233,6 +265,86 @@ class DemoDataSeeder extends Seeder
             'body'       => "We received an alert that last night's Veeam backup failed at 02:15. Error code: VeeamBackup_E_CANT_CONNECT. Please investigate ASAP as we need backup coverage restored.",
             'source'     => 'email',
             'is_internal' => false,
+        ]);
+
+        // Phase 4 — CRM demo data
+        if (Pipeline::count() > 0) return;
+
+        $pipeline = Pipeline::create([
+            'company_id' => $company->id,
+            'name'       => 'Sales Pipeline',
+            'is_default' => true,
+        ]);
+
+        $stages = collect([
+            ['name' => 'Prospecting',  'color' => 'gray',   'probability' => 10],
+            ['name' => 'Qualified',    'color' => 'blue',   'probability' => 30],
+            ['name' => 'Proposal',     'color' => 'purple', 'probability' => 50],
+            ['name' => 'Negotiation',  'color' => 'yellow', 'probability' => 75],
+            ['name' => 'Closed Won',   'color' => 'green',  'probability' => 100],
+        ])->map(fn ($s, $i) => $pipeline->stages()->create(array_merge($s, ['sort_order' => $i])));
+
+        $stageMap = $stages->keyBy('name');
+
+        $d1 = Deal::create([
+            'company_id'          => $company->id,
+            'client_id'           => $client->id,
+            'contact_id'          => $contact?->id,
+            'pipeline_id'         => $pipeline->id,
+            'stage_id'            => $stageMap['Proposal']->id,
+            'assigned_to'         => $admin->id,
+            'name'                => 'Acme — Full Network Refresh',
+            'value'               => 18500.00,
+            'status'              => 'open',
+            'expected_close_date' => now()->addDays(21)->toDateString(),
+            'notes'               => 'Replace aging Cisco switches and upgrade Wi-Fi to Meraki MR46.',
+        ]);
+
+        Activity::create([
+            'company_id'  => $company->id,
+            'user_id'     => $admin->id,
+            'deal_id'     => $d1->id,
+            'client_id'   => $client->id,
+            'type'        => 'call',
+            'subject'     => 'Discovery call with Jane Doe',
+            'description' => 'Discussed current pain points: slow Wi-Fi, VLAN sprawl. Jane confirmed budget approved.',
+            'outcome'     => 'Proceed to formal proposal.',
+            'completed_at' => now()->subDays(3),
+        ]);
+
+        Activity::create([
+            'company_id'  => $company->id,
+            'user_id'     => $admin->id,
+            'deal_id'     => $d1->id,
+            'client_id'   => $client->id,
+            'type'        => 'email',
+            'subject'     => 'Sent proposal v1.0',
+            'description' => 'Sent detailed scope + pricing for network refresh project.',
+            'completed_at' => now()->subDay(),
+        ]);
+
+        Activity::create([
+            'company_id' => $company->id,
+            'user_id'    => $admin->id,
+            'deal_id'    => $d1->id,
+            'client_id'  => $client->id,
+            'type'       => 'task',
+            'subject'    => 'Follow up on proposal — awaiting sign-off',
+            'due_at'     => now()->addDays(3),
+        ]);
+
+        $globex = Client::where('name', 'Globex Industries')->first();
+        Deal::create([
+            'company_id'          => $company->id,
+            'client_id'           => $globex?->id,
+            'pipeline_id'         => $pipeline->id,
+            'stage_id'            => $stageMap['Qualified']->id,
+            'assigned_to'         => $admin->id,
+            'name'                => 'Globex — Managed Services Onboarding',
+            'value'               => 36000.00,
+            'status'              => 'open',
+            'expected_close_date' => now()->addDays(45)->toDateString(),
+            'notes'               => 'Annual MSP contract. 40 seats. Includes M365, backup, monitoring.',
         ]);
     }
 }

@@ -61,6 +61,11 @@ class Client extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function deals()
+    {
+        return $this->hasMany(Deal::class);
+    }
+
     public function primaryContact()
     {
         return $this->hasOne(Contact::class)->where('is_primary', true);

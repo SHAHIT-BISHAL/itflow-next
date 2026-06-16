@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Domain;
+use App\Models\Deal;
 use App\Models\Ticket;
 use Livewire\Component;
 
@@ -19,6 +20,8 @@ class Dashboard extends Component
             'contactCount'   => Contact::whereHas('client')->active()->count(),
             'assetCount'     => Asset::active()->count(),
             'openTickets'    => Ticket::active()->open()->count(),
+            'openDeals'      => Deal::active()->open()->count(),
+            'pipelineValue'  => Deal::active()->open()->sum('value'),
             'urgentTickets'  => Ticket::active()->open()->where('priority', 'urgent')->count(),
             'expiringDomains' => Domain::active()->expiringSoon(30)->orderBy('expires_at')->take(5)->get(),
             'expiringCount'   => Domain::active()->expiringSoon(30)->count(),
