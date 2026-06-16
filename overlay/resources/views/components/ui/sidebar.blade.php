@@ -17,9 +17,12 @@
         ['label' => 'Deals', 'icon' => 'funnel', 'route' => 'deals.index', 'active' => request()->routeIs('deals.*')],
     ];
 
-    $comingSoon = [
-        ['label' => 'Billing', 'icon' => 'banknotes'],
+    $billing = [
+        ['label' => 'Invoices', 'icon' => 'document-text', 'route' => 'invoices.index', 'active' => request()->routeIs('invoices.*')],
+        ['label' => 'Expenses',  'icon' => 'banknotes',    'route' => 'expenses.index',  'active' => request()->routeIs('expenses.*')],
     ];
+
+    $comingSoon = [];
 
     $admin = [
         ['label' => 'Users', 'icon' => 'user-group', 'route' => 'admin.users.index', 'active' => request()->routeIs('admin.users.*')],
@@ -90,13 +93,14 @@
         </div>
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Coming soon</p>
-            @foreach ($comingSoon as $item)
-                <span class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 cursor-not-allowed">
+            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Billing</p>
+            @foreach ($billing as $item)
+                <a href="{{ route($item['route']) }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
                     {{ $item['label'] }}
-                    <span class="ml-auto rounded-full bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide">Soon</span>
-                </span>
+                </a>
             @endforeach
         </div>
 
@@ -116,6 +120,6 @@
     </nav>
 
     <div class="border-t border-slate-800 p-4 text-xs text-slate-500">
-        v0.4 · Phase 4 CRM
+        v0.5 · Phase 5 Billing
     </div>
 </aside>

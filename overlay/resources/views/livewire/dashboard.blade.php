@@ -103,11 +103,15 @@
                 @endif
             </x-ui.card>
         </a>
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Revenue MTD</p>
-            <p class="mt-2 text-3xl font-semibold text-slate-400">—</p>
-            <p class="text-xs text-slate-400">Coming in Phase 5</p>
-        </x-ui.card>
+        <a href="{{ route('invoices.index') }}" class="block">
+            <x-ui.card class="hover:border-brand-300 transition">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Revenue MTD</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">${{ number_format($revenueMtd, 0) }}</p>
+                @if ($overdueInvoices > 0)
+                    <p class="text-xs text-red-500 mt-1">{{ $overdueInvoices }} overdue</p>
+                @endif
+            </x-ui.card>
+        </a>
         <a href="{{ route('deals.index') }}" class="block">
             <x-ui.card class="hover:border-brand-300 transition">
                 <p class="text-xs uppercase tracking-wide text-slate-500">Open Deals</p>

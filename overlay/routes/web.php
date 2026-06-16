@@ -5,6 +5,10 @@ use App\Livewire\Admin\Roles\Index as RolesIndex;
 use App\Livewire\Admin\Tags\Index as TagsIndex;
 use App\Livewire\Admin\Users\Index as UsersIndex;
 use App\Livewire\Admin\MailAccounts\Index as MailAccountsIndex;
+use App\Livewire\Expenses\Index as ExpensesIndex;
+use App\Livewire\Invoices\Create as InvoicesCreate;
+use App\Livewire\Invoices\Index as InvoicesIndex;
+use App\Livewire\Invoices\Show as InvoicesShow;
 use App\Livewire\Admin\Pipelines\Index as PipelinesIndex;
 use App\Livewire\Deals\Index as DealsIndex;
 use App\Livewire\Deals\Show as DealsShow;
@@ -38,6 +42,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // IT Documentation — global pages
     Route::get('assets', AssetsIndex::class)->name('assets.index');
     Route::get('domains', DomainsIndex::class)->name('domains.index');
+
+    // Billing
+    Route::get('invoices', InvoicesIndex::class)->name('invoices.index');
+    Route::get('invoices/create', InvoicesCreate::class)->name('invoices.create');
+    Route::get('invoices/{invoice}/edit', InvoicesCreate::class)->name('invoices.edit');
+    Route::get('invoices/{invoice}', InvoicesShow::class)->name('invoices.show');
+    Route::get('expenses', ExpensesIndex::class)->name('expenses.index');
 
     // CRM — Deals
     Route::get('deals', DealsIndex::class)->name('deals.index');

@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Domain;
 use App\Models\Deal;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Ticket;
 use Livewire\Component;
 
@@ -22,6 +24,8 @@ class Dashboard extends Component
             'openTickets'    => Ticket::active()->open()->count(),
             'openDeals'      => Deal::active()->open()->count(),
             'pipelineValue'  => Deal::active()->open()->sum('value'),
+            'revenueMtd'     => Payment::whereMonth('paid_at', today()->month)->whereYear('paid_at', today()->year)->sum('amount'),
+            'overdueInvoices' => Invoice::active()->overdue()->count(),
             'urgentTickets'  => Ticket::active()->open()->where('priority', 'urgent')->count(),
             'expiringDomains' => Domain::active()->expiringSoon(30)->orderBy('expires_at')->take(5)->get(),
             'expiringCount'   => Domain::active()->expiringSoon(30)->count(),

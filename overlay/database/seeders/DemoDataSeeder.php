@@ -12,6 +12,9 @@ use App\Models\Location;
 use App\Models\Password;
 use App\Models\Activity;
 use App\Models\Deal;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
 use App\Models\Ticket;
@@ -345,6 +348,103 @@ class DemoDataSeeder extends Seeder
             'status'              => 'open',
             'expected_close_date' => now()->addDays(45)->toDateString(),
             'notes'               => 'Annual MSP contract. 40 seats. Includes M365, backup, monitoring.',
+        ]);
+
+        // Phase 5 — Billing demo data
+        if (Invoice::count() > 0) return;
+
+        // Invoice 1 — paid
+        $inv1 = Invoice::create([
+            'company_id'     => $company->id,
+            'client_id'      => $client->id,
+            'invoice_number' => 'INV-0001',
+            'status'         => 'paid',
+            'currency'       => 'USD',
+            'issue_date'     => now()->subDays(45)->toDateString(),
+            'due_date'       => now()->subDays(15)->toDateString(),
+            'notes'          => 'Thank you for your business.',
+            'subtotal'       => 0,
+            'tax_amount'     => 0,
+            'total'          => 0,
+            'amount_paid'    => 0,
+            'paid_at'        => now()->subDays(10),
+        ]);
+        $inv1->items()->createMany([
+            ['description' => 'Managed IT Support — May', 'quantity' => 1, 'unit_price' => 1500.00, 'tax_rate' => 10, 'amount' => 1500.00, 'sort_order' => 0],
+            ['description' => 'Remote Monitoring & Management (40 seats × $5)', 'quantity' => 40, 'unit_price' => 5.00, 'tax_rate' => 10, 'amount' => 200.00, 'sort_order' => 1],
+            ['description' => 'Microsoft 365 Business Premium (25 seats)', 'quantity' => 25, 'unit_price' => 22.00, 'tax_rate' => 10, 'amount' => 550.00, 'sort_order' => 2],
+        ]);
+        $inv1->recalculate();
+        Payment::create([
+            'company_id' => $company->id,
+            'client_id'  => $client->id,
+            'invoice_id' => $inv1->id,
+            'amount'     => $inv1->fresh()->total,
+            'currency'   => 'USD',
+            'method'     => 'bank_transfer',
+            'reference'  => 'TRN-1001',
+            'paid_at'    => now()->subDays(10)->toDateString(),
+        ]);
+        $inv1->recalculate();
+
+        // Invoice 2 — sent / outstanding
+        $inv2 = Invoice::create([
+            'company_id'     => $company->id,
+            'client_id'      => $client->id,
+            'invoice_number' => 'INV-0002',
+            'status'         => 'sent',
+            'currency'       => 'USD',
+            'issue_date'     => now()->subDays(5)->toDateString(),
+            'due_date'       => now()->addDays(25)->toDateString(),
+            'notes'          => 'June managed services.',
+            'subtotal'       => 0,
+            'tax_amount'     => 0,
+            'total'          => 0,
+            'amount_paid'    => 0,
+            'sent_at'        => now()->subDays(5),
+        ]);
+        $inv2->items()->createMany([
+            ['description' => 'Managed IT Support — June', 'quantity' => 1, 'unit_price' => 1500.00, 'tax_rate' => 10, 'amount' => 1500.00, 'sort_order' => 0],
+            ['description' => 'Remote Monitoring & Management (40 seats × $5)', 'quantity' => 40, 'unit_price' => 5.00, 'tax_rate' => 10, 'amount' => 200.00, 'sort_order' => 1],
+            ['description' => 'Emergency On-Site Call — DC01 disk cleanup (2 hrs)', 'quantity' => 2, 'unit_price' => 150.00, 'tax_rate' => 0, 'amount' => 300.00, 'sort_order' => 2],
+        ]);
+        $inv2->recalculate();
+
+        // Expenses
+        Expense::create([
+            'company_id'   => $company->id,
+            'user_id'      => $admin->id,
+            'client_id'    => $client->id,
+            'category'     => 'software',
+            'description'  => 'Veeam Backup license renewal',
+            'amount'       => 349.00,
+            'vendor'       => 'Veeam',
+            'expense_date' => now()->subDays(30)->toDateString(),
+            'is_billable'  => true,
+            'currency'     => 'USD',
+        ]);
+        Expense::create([
+            'company_id'   => $company->id,
+            'user_id'      => $admin->id,
+            'category'     => 'software',
+            'description'  => 'ITFlow-Next server hosting — monthly',
+            'amount'       => 45.00,
+            'vendor'       => 'DigitalOcean',
+            'expense_date' => now()->startOfMonth()->toDateString(),
+            'is_billable'  => false,
+            'currency'     => 'USD',
+        ]);
+        Expense::create([
+            'company_id'   => $company->id,
+            'user_id'      => $admin->id,
+            'client_id'    => $client->id,
+            'category'     => 'hardware',
+            'description'  => 'Network switch replacement — Cisco SG350',
+            'amount'       => 420.00,
+            'vendor'       => 'Ingram Micro',
+            'expense_date' => now()->subDays(10)->toDateString(),
+            'is_billable'  => true,
+            'currency'     => 'USD',
         ]);
     }
 }
