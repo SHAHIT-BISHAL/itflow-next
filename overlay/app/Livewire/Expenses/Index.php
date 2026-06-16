@@ -5,6 +5,7 @@ namespace App\Livewire\Expenses;
 use App\Models\Client;
 use App\Models\Expense;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -28,16 +29,24 @@ class Index extends Component
         'currency'     => 'USD',
     ];
 
-    protected array $rules = [
-        'form.description'  => 'required|string|max:255',
-        'form.amount'       => 'required|numeric|min:0.01',
-        'form.category'     => 'required|in:general,software,hardware,travel,labour,other',
-        'form.vendor'       => 'nullable|string|max:100',
-        'form.client_id'    => 'nullable|exists:clients,id',
-        'form.expense_date' => 'required|date',
-        'form.is_billable'  => 'boolean',
-        'form.currency'     => 'required|string|size:3',
-    ];
+    protected function rules(): array
+    {
+        return [
+            'form.description'  => 'required|string|max:255',
+            'form.amount'       => 'required|numeric|min:0.01',
+            'form.category'     => 'required|in:general,software,hardware,travel,labour,other',
+            'form.vendor'       => 'nullable|string|max:100',
+            'form.client_id'    => [
+                'nullable',
+                Rule::exists('clients', 'id')->where(fn ($query) => $query
+                    ->where('company_id', Auth::user()->company_id)
+                    ->whereNull('archived_at')),
+            ],
+            'form.expense_date' => 'required|date',
+            'form.is_billable'  => 'boolean',
+            'form.currency'     => 'required|string|size:3',
+        ];
+    }
 
     public function openCreate(): void
     {
@@ -48,7 +57,7 @@ class Index extends Component
 
     public function openEdit(int $id): void
     {
-        $e = Expense::findOrFail($id);
+        $e = Expense::where('company_id', Auth::user()->company_id)->findOrFail($id);
         $this->editingId = $id;
         $this->form = [
             'description'  => $e->description,
@@ -73,14 +82,17 @@ class Index extends Component
         ]);
 
         if ($this->editingId) {
-            Expense::findOrFail($this->editingId)->update($payload);
+            Expense::where('company_id', Auth::user()->company_id)->findOrFail($this->editingId)->update($payload);
         } else {
             Expense::create($payload);
         }
         $this->showModal = false;
     }
 
-    public function delete(int $id): void { Expense::findOrFail($id)->delete(); }
+    public function delete(int $id): void
+    {
+        Expense::where('company_id', Auth::user()->company_id)->findOrFail($id)->delete();
+    }
 
     public function render()
     {
@@ -95,7 +107,10 @@ class Index extends Component
         return view('livewire.expenses.index', [
             'expenses'   => $expenses,
             'clients'    => Client::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
-            'totalMonth' => Expense::where('company_id', $companyId)->whereMonth('expense_date', today()->month)->sum('amount'),
+            'totalMonth' => Expense::where('company_id', $companyId)
+                ->whereMonth('expense_date', today()->month)
+                ->whereYear('expense_date', today()->year)
+                ->sum('amount'),
         ])->layout('components.layouts.app', ['header' => 'Expenses']);
     }
 }

@@ -5,8 +5,10 @@ namespace App\Livewire\Deals;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Pipeline;
+use App\Models\PipelineStage;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -35,17 +37,44 @@ class Index extends Component
 
     public array $stageOptions = [];
 
-    protected array $rules = [
-        'form.name'                => 'required|string|max:255',
-        'form.client_id'           => 'nullable|exists:clients,id',
-        'form.contact_id'          => 'nullable|exists:contacts,id',
-        'form.pipeline_id'         => 'required|exists:pipelines,id',
-        'form.stage_id'            => 'required|exists:pipeline_stages,id',
-        'form.assigned_to'         => 'nullable|exists:users,id',
-        'form.value'               => 'nullable|numeric|min:0',
-        'form.expected_close_date' => 'nullable|date',
-        'form.notes'               => 'nullable|string',
-    ];
+    protected function rules(): array
+    {
+        $companyId = Auth::user()->company_id;
+
+        return [
+            'form.name'                => 'required|string|max:255',
+            'form.client_id'           => [
+                'nullable',
+                Rule::exists('clients', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')),
+            ],
+            'form.contact_id'          => [
+                'nullable',
+                Rule::exists('contacts', 'id')->where(fn ($query) => $query
+                    ->where('client_id', $this->form['client_id'] ?: 0)
+                    ->whereNull('archived_at')),
+            ],
+            'form.pipeline_id'         => [
+                'required',
+                Rule::exists('pipelines', 'id')->where(fn ($query) => $query->where('company_id', $companyId)),
+            ],
+            'form.stage_id'            => [
+                'required',
+                Rule::exists('pipeline_stages', 'id')->where(fn ($query) => $query
+                    ->where('pipeline_id', $this->form['pipeline_id'] ?: 0)),
+            ],
+            'form.assigned_to'         => [
+                'nullable',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')),
+            ],
+            'form.value'               => 'nullable|numeric|min:0',
+            'form.expected_close_date' => 'nullable|date',
+            'form.notes'               => 'nullable|string',
+        ];
+    }
 
     public function mount(): void
     {
@@ -63,7 +92,7 @@ class Index extends Component
 
     public function loadStages(): void
     {
-        $this->stageOptions = Pipeline::find($this->form['pipeline_id'])
+        $this->stageOptions = Pipeline::where('company_id', Auth::user()->company_id)->find($this->form['pipeline_id'])
             ?->stages->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->toArray() ?? [];
     }
 
@@ -89,17 +118,23 @@ class Index extends Component
 
     public function moveStage(int $dealId, int $stageId): void
     {
-        Deal::findOrFail($dealId)->update(['stage_id' => $stageId]);
+        $stage = PipelineStage::whereHas('pipeline', fn ($query) => $query->where('company_id', Auth::user()->company_id))
+            ->findOrFail($stageId);
+
+        Deal::where('company_id', Auth::user()->company_id)
+            ->where('pipeline_id', $stage->pipeline_id)
+            ->findOrFail($dealId)
+            ->update(['stage_id' => $stage->id]);
     }
 
     public function markWon(int $dealId): void
     {
-        Deal::findOrFail($dealId)->update(['status' => 'won', 'closed_at' => now()]);
+        Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId)->update(['status' => 'won', 'closed_at' => now()]);
     }
 
     public function markLost(int $dealId, string $reason = ''): void
     {
-        Deal::findOrFail($dealId)->update(['status' => 'lost', 'closed_at' => now(), 'lost_reason' => $reason]);
+        Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId)->update(['status' => 'lost', 'closed_at' => now(), 'lost_reason' => $reason]);
     }
 
     public function updatingSearch(): void  { $this->resetPage(); }
@@ -131,8 +166,8 @@ class Index extends Component
             'pipelines'      => $pipelines,
             'activePipeline' => $activePipeline,
             'kanbanDeals'    => $kanbanDeals,
-            'clients'        => Client::active()->orderBy('name')->get(['id', 'name']),
-            'users'          => User::orderBy('name')->get(['id', 'name']),
+            'clients'        => Client::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
+            'users'          => User::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
             'totalValue'     => Deal::active()->where('company_id', $companyId)->open()->sum('value'),
             'openCount'      => Deal::active()->where('company_id', $companyId)->open()->count(),
         ])->layout('components.layouts.app', ['header' => 'Deals']);

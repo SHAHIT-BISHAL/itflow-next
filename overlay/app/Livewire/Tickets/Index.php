@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -28,14 +29,29 @@ class Index extends Component
         'body'        => '',
     ];
 
-    protected array $rules = [
-        'form.subject'     => 'required|string|max:255',
-        'form.client_id'   => 'nullable|exists:clients,id',
-        'form.priority'    => 'required|in:low,medium,high,urgent',
-        'form.type'        => 'required|in:general,technical,billing,other',
-        'form.assigned_to' => 'nullable|exists:users,id',
-        'form.body'        => 'required|string',
-    ];
+    protected function rules(): array
+    {
+        $companyId = Auth::user()->company_id;
+
+        return [
+            'form.subject'     => 'required|string|max:255',
+            'form.client_id'   => [
+                'nullable',
+                Rule::exists('clients', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')),
+            ],
+            'form.priority'    => 'required|in:low,medium,high,urgent',
+            'form.type'        => 'required|in:general,technical,billing,other',
+            'form.assigned_to' => [
+                'nullable',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')),
+            ],
+            'form.body'        => 'required|string',
+        ];
+    }
 
     public function updatingSearch(): void  { $this->resetPage(); }
     public function updatingStatus(): void  { $this->resetPage(); }
@@ -77,7 +93,10 @@ class Index extends Component
 
     public function render()
     {
+        $companyId = Auth::user()->company_id;
+
         $tickets = Ticket::active()
+            ->where('company_id', $companyId)
             ->with(['client', 'assignee', 'latestReply'])
             ->when($this->search,   fn ($q) => $q->where('subject', 'like', "%{$this->search}%"))
             ->when($this->status,   fn ($q) => $q->where('status', $this->status))
@@ -89,8 +108,8 @@ class Index extends Component
 
         return view('livewire.tickets.index', [
             'tickets' => $tickets,
-            'clients' => Client::active()->orderBy('name')->get(['id', 'name']),
-            'users'   => User::orderBy('name')->get(['id', 'name']),
+            'clients' => Client::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
+            'users'   => User::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
         ])->layout('components.layouts.app', ['header' => 'Tickets']);
     }
 }

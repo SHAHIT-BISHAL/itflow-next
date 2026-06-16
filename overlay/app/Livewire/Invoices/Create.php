@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Create extends Component
@@ -27,18 +28,41 @@ class Create extends Component
 
     public array $contacts = [];
 
-    protected array $rules = [
-        'form.client_id'      => 'required|exists:clients,id',
-        'form.invoice_number' => 'required|string|max:50',
-        'form.issue_date'     => 'required|date',
-        'form.due_date'       => 'required|date|after_or_equal:form.issue_date',
-        'form.currency'       => 'required|string|size:3',
-        'items'               => 'required|array|min:1',
-        'items.*.description' => 'required|string',
-        'items.*.quantity'    => 'required|numeric|min:0.01',
-        'items.*.unit_price'  => 'required|numeric|min:0',
-        'items.*.tax_rate'    => 'nullable|numeric|min:0|max:100',
-    ];
+    protected function rules(): array
+    {
+        $companyId = Auth::user()->company_id;
+
+        return [
+            'form.client_id'      => [
+                'required',
+                Rule::exists('clients', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')),
+            ],
+            'form.contact_id'     => [
+                'nullable',
+                Rule::exists('contacts', 'id')->where(fn ($query) => $query
+                    ->where('client_id', $this->form['client_id'] ?: 0)
+                    ->whereNull('archived_at')),
+            ],
+            'form.invoice_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('invoices', 'invoice_number')
+                    ->where(fn ($query) => $query->where('company_id', $companyId))
+                    ->ignore($this->invoiceId),
+            ],
+            'form.issue_date'     => 'required|date',
+            'form.due_date'       => 'required|date|after_or_equal:form.issue_date',
+            'form.currency'       => 'required|string|size:3',
+            'items'               => 'required|array|min:1',
+            'items.*.description' => 'required|string',
+            'items.*.quantity'    => 'required|numeric|min:0.01',
+            'items.*.unit_price'  => 'required|numeric|min:0',
+            'items.*.tax_rate'    => 'nullable|numeric|min:0|max:100',
+        ];
+    }
 
     public function mount(?Invoice $invoice = null): void
     {
@@ -63,12 +87,21 @@ class Create extends Component
         }
     }
 
-    public function updatedFormClientId(): void { $this->loadContacts(); }
+    public function updatedFormClientId(): void
+    {
+        $this->form['contact_id'] = '';
+        $this->loadContacts();
+    }
 
     public function loadContacts(): void
     {
         $this->contacts = $this->form['client_id']
-            ? Contact::where('client_id', $this->form['client_id'])->orderBy('name')->get(['id', 'name'])->toArray()
+            ? Contact::active()
+                ->where('client_id', $this->form['client_id'])
+                ->whereHas('client', fn ($query) => $query->where('company_id', Auth::user()->company_id))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->toArray()
             : [];
     }
 
@@ -112,7 +145,7 @@ class Create extends Component
         ]);
 
         if ($this->invoiceId) {
-            $invoice = Invoice::findOrFail($this->invoiceId);
+            $invoice = Invoice::where('company_id', $companyId)->findOrFail($this->invoiceId);
             $invoice->update($invoiceData);
             $invoice->items()->delete();
         } else {

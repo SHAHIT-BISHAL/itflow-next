@@ -44,12 +44,23 @@ class Show extends Component
     public function recordPayment(): void
     {
         $data = $this->validate($this->paymentRules);
+        $amount = (float) $data['paymentForm']['amount'];
+
+        if ($this->invoice->status === 'void' || $this->invoice->amount_due <= 0) {
+            $this->addError('paymentForm.amount', 'This invoice cannot accept another payment.');
+            return;
+        }
+
+        if ($amount > $this->invoice->amount_due) {
+            $this->addError('paymentForm.amount', 'Payment cannot exceed the invoice amount due.');
+            return;
+        }
 
         Payment::create([
             'company_id' => Auth::user()->company_id,
             'client_id'  => $this->invoice->client_id,
             'invoice_id' => $this->invoice->id,
-            'amount'     => $data['paymentForm']['amount'],
+            'amount'     => $amount,
             'currency'   => $this->invoice->currency,
             'method'     => $data['paymentForm']['method'],
             'reference'  => $data['paymentForm']['reference'] ?: null,
