@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTags;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    use HasTags;
+    use HasFactory, HasTags;
 
     protected $fillable = [
         'client_id', 'name', 'description', 'address', 'city', 'state', 'zip', 'country',

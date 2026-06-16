@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Contact extends Model implements Authenticatable
 {
-    use HasTags, AuthenticatableTrait, Authorizable, Notifiable;
+    use HasFactory, HasTags, AuthenticatableTrait, Authorizable, Notifiable;
 
     protected $fillable = [
         'client_id', 'location_id', 'name', 'title', 'department', 'email', 'phone',

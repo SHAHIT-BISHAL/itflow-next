@@ -1,6 +1,6 @@
 <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-4">
-        <button type="button" class="lg:hidden text-slate-500" @click="sidebarOpen = !sidebarOpen">
+        <button type="button" class="lg:hidden text-slate-500" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle navigation menu">
             <x-ui.icon name="bars-3" class="h-6 w-6" />
         </button>
 
@@ -10,7 +10,7 @@
     </div>
 
     <div class="flex items-center gap-4">
-        <button type="button" class="relative text-slate-500 hover:text-slate-700">
+        <button type="button" class="relative text-slate-500 hover:text-slate-700" aria-label="Notifications" title="Notifications (coming soon)">
             <x-ui.icon name="bell" class="h-6 w-6" />
         </button>
 

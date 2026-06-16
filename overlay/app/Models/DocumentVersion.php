@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentVersion extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'document_id', 'created_by', 'version_number', 'title', 'content', 'change_summary',
     ];

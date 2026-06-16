@@ -69,6 +69,8 @@ class Create extends Component
         $companyId = Auth::user()->company_id;
 
         if ($invoice && $invoice->exists) {
+            abort_if($invoice->company_id !== $companyId, 404);
+
             $this->invoiceId = $invoice->id;
             $this->form = $invoice->only(['client_id', 'contact_id', 'invoice_number', 'currency', 'notes', 'terms'])
                 + ['issue_date' => $invoice->issue_date->format('Y-m-d'), 'due_date' => $invoice->due_date->format('Y-m-d')];

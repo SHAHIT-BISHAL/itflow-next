@@ -14,6 +14,8 @@
         @livewireStyles
     </head>
     <body class="h-full font-sans antialiased text-slate-800">
+        <x-ui.toast />
+
         <div class="flex h-full" x-data="{ sidebarOpen: false }">
             <x-ui.sidebar />
 

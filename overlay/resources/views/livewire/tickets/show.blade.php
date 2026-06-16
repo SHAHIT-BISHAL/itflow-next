@@ -95,7 +95,7 @@
                 @error('replyBody') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 
                 <div class="mt-3 flex justify-end">
-                    <x-ui.button wire:click="sendReply" wire:loading.attr="disabled">
+                    <x-ui.button wire:click="sendReply" loading="sendReply">
                         {{ $isInternal ? 'Save Note' : 'Send Reply' }}
                     </x-ui.button>
                 </div>
@@ -138,7 +138,7 @@
                         @endforeach
                     </select>
                 </div>
-                <x-ui.button wire:click="updateMeta" class="w-full justify-center">Save Changes</x-ui.button>
+                <x-ui.button wire:click="updateMeta" loading="updateMeta" class="w-full justify-center">Save Changes</x-ui.button>
             </div>
         </x-ui.card>
 

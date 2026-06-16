@@ -213,7 +213,7 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="secondary" wire:click="$set('showPaymentModal', false)">Cancel</x-ui.button>
-            <x-ui.button wire:click="recordPayment">Record Payment</x-ui.button>
+            <x-ui.button wire:click="recordPayment" loading="recordPayment">Record Payment</x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 </div>

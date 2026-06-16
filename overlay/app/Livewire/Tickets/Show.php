@@ -56,6 +56,7 @@ class Show extends Component
         $this->replyBody  = '';
         $this->isInternal = false;
         $this->ticket->refresh();
+        $this->dispatch('toast', message: $reply->is_internal ? 'Internal note added.' : 'Reply sent.', type: 'success');
     }
 
     public function updateMeta(): void
@@ -80,7 +81,7 @@ class Show extends Component
         ]);
 
         $this->ticket->refresh();
-        session()->flash('success', 'Ticket updated.');
+        $this->dispatch('toast', message: 'Ticket updated.', type: 'success');
     }
 
     public function render()

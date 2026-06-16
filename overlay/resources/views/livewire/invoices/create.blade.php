@@ -145,10 +145,10 @@
         <div class="w-52 shrink-0 space-y-3">
             <x-ui.card>
                 <div class="space-y-2">
-                    <x-ui.button wire:click="save('send')" class="w-full justify-center">
+                    <x-ui.button wire:click="save('send')" loading="save" class="w-full justify-center">
                         Save & Mark Sent
                     </x-ui.button>
-                    <x-ui.button wire:click="save('draft')" variant="secondary" class="w-full justify-center">
+                    <x-ui.button wire:click="save('draft')" loading="save" variant="secondary" class="w-full justify-center">
                         Save as Draft
                     </x-ui.button>
                     <a href="{{ route('invoices.index') }}" wire:navigate class="block text-center text-sm text-slate-500 hover:text-slate-700 pt-1">

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TicketAttachment extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['ticket_reply_id', 'filename', 'path', 'mime_type', 'size'];
 
     public function reply() { return $this->belongsTo(TicketReply::class, 'ticket_reply_id'); }

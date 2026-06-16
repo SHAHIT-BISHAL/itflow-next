@@ -71,13 +71,14 @@ class Show extends Component
         $this->invoice->recalculate();
         $this->invoice->refresh();
         $this->showPaymentModal = false;
-        session()->flash('success', 'Payment recorded.');
+        $this->dispatch('toast', message: 'Payment of $' . number_format($amount, 2) . ' recorded.', type: 'success');
     }
 
     public function markVoid(): void
     {
         $this->invoice->update(['status' => 'void']);
         $this->invoice->refresh();
+        $this->dispatch('toast', message: 'Invoice marked as void.', type: 'info');
     }
 
     public function render()

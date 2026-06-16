@@ -66,7 +66,7 @@ class Show extends Component
             'closed_at'   => in_array($data['editStatus'], ['won', 'lost']) ? ($this->deal->closed_at ?? now()) : null,
         ]);
         $this->deal->refresh();
-        session()->flash('success', 'Deal updated.');
+        $this->dispatch('toast', message: 'Deal updated.', type: 'success');
     }
 
     public function openActivityModal(): void
@@ -88,6 +88,7 @@ class Show extends Component
         ]));
         $this->showActivityModal = false;
         $this->deal->refresh();
+        $this->dispatch('toast', message: ucfirst($data['activityForm']['type']) . ' logged.', type: 'success');
     }
 
     public function completeActivity(int $id): void
