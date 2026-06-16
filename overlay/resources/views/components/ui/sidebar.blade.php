@@ -9,8 +9,11 @@
         ['label' => 'Domains & Certs', 'icon' => 'globe-alt', 'route' => 'domains.index', 'active' => request()->routeIs('domains.*')],
     ];
 
+    $tickets = [
+        ['label' => 'Tickets', 'icon' => 'ticket', 'route' => 'tickets.index', 'active' => request()->routeIs('tickets.*')],
+    ];
+
     $comingSoon = [
-        ['label' => 'Tickets', 'icon' => 'lifebuoy'],
         ['label' => 'CRM / Sales', 'icon' => 'chart-bar'],
         ['label' => 'Billing', 'icon' => 'banknotes'],
     ];
@@ -20,6 +23,7 @@
         ['label' => 'Roles', 'icon' => 'shield-check', 'route' => 'admin.roles.index', 'active' => request()->routeIs('admin.roles.*')],
         ['label' => 'Tags', 'icon' => 'tag', 'route' => 'admin.tags.index', 'active' => request()->routeIs('admin.tags.*')],
         ['label' => 'Categories', 'icon' => 'folder', 'route' => 'admin.categories.index', 'active' => request()->routeIs('admin.categories.*')],
+        ['label' => 'Mail Accounts', 'icon' => 'inbox-arrow-down', 'route' => 'admin.mail-accounts.index', 'active' => request()->routeIs('admin.mail-accounts.*')],
     ];
 @endphp
 
@@ -58,6 +62,18 @@
         </div>
 
         <div class="pt-4">
+            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Support</p>
+            @foreach ($tickets as $item)
+                <a href="{{ route($item['route']) }}"
+                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
+        </div>
+
+        <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Coming soon</p>
             @foreach ($comingSoon as $item)
                 <span class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 cursor-not-allowed">
@@ -84,6 +100,6 @@
     </nav>
 
     <div class="border-t border-slate-800 p-4 text-xs text-slate-500">
-        v0.2 · Phase 2 IT Documentation
+        v0.3 · Phase 3 Ticketing
     </div>
 </aside>

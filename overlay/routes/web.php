@@ -4,11 +4,14 @@ use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Roles\Index as RolesIndex;
 use App\Livewire\Admin\Tags\Index as TagsIndex;
 use App\Livewire\Admin\Users\Index as UsersIndex;
+use App\Livewire\Admin\MailAccounts\Index as MailAccountsIndex;
 use App\Livewire\Assets\Index as AssetsIndex;
 use App\Livewire\Clients\Index as ClientsIndex;
 use App\Livewire\Clients\Show as ClientsShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Domains\Index as DomainsIndex;
+use App\Livewire\Tickets\Index as TicketsIndex;
+use App\Livewire\Tickets\Show as TicketsShow;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -33,12 +36,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('assets', AssetsIndex::class)->name('assets.index');
     Route::get('domains', DomainsIndex::class)->name('domains.index');
 
+    // Support — Tickets
+    Route::get('tickets', TicketsIndex::class)->name('tickets.index');
+    Route::get('tickets/{ticket}', TicketsShow::class)->name('tickets.show');
+
     // Administration
     Route::middleware('permission:manage users')->prefix('admin')->name('admin.')->group(function () {
         Route::get('users', UsersIndex::class)->name('users.index');
         Route::get('roles', RolesIndex::class)->name('roles.index');
         Route::get('tags', TagsIndex::class)->name('tags.index');
         Route::get('categories', CategoriesIndex::class)->name('categories.index');
+        Route::get('mail-accounts', MailAccountsIndex::class)->name('mail-accounts.index');
     });
 
     Route::redirect('settings', 'settings/profile');

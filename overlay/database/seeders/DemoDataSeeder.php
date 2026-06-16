@@ -10,6 +10,7 @@ use App\Models\Document;
 use App\Models\Domain;
 use App\Models\Location;
 use App\Models\Password;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -166,6 +167,72 @@ class DemoDataSeeder extends Seeder
             'type' => 'Lead',
             'is_lead' => true,
             'net_terms' => 15,
+        ]);
+
+        // Phase 3 — Ticket demo data
+        $contact = $client->contacts()->first();
+
+        $t1 = Ticket::create([
+            'company_id' => $company->id,
+            'client_id'  => $client->id,
+            'contact_id' => $contact?->id,
+            'assigned_to' => $admin->id,
+            'subject'    => 'DC01 running out of disk space',
+            'status'     => 'open',
+            'priority'   => 'high',
+            'type'       => 'technical',
+            'source'     => 'email',
+        ]);
+        $t1->replies()->create([
+            'contact_id' => $contact?->id,
+            'body'       => "Hi team,\n\nWe're seeing a warning on ACME-DC01 that C: is at 92% capacity. Can you please investigate and free up some space?\n\nThanks,\nJane",
+            'source'     => 'email',
+            'is_internal' => false,
+        ]);
+        $t1->replies()->create([
+            'user_id'    => $admin->id,
+            'body'       => "Thanks Jane, I'll remote in now and check what's consuming the space. Will keep you posted.",
+            'source'     => 'web',
+            'is_internal' => false,
+        ]);
+        $t1->replies()->create([
+            'user_id'    => $admin->id,
+            'body'       => "Note: C:\\Windows\\SoftwareDistribution is 40GB. Looks like failed Windows Update cache. Running cleanup now.",
+            'source'     => 'web',
+            'is_internal' => true,
+        ]);
+
+        $t2 = Ticket::create([
+            'company_id' => $company->id,
+            'client_id'  => $client->id,
+            'assigned_to' => $admin->id,
+            'subject'    => 'User locked out of Office 365',
+            'status'     => 'resolved',
+            'priority'   => 'medium',
+            'type'       => 'general',
+            'source'     => 'phone',
+            'resolved_at' => now()->subHours(2),
+        ]);
+        $t2->replies()->create([
+            'user_id'    => $admin->id,
+            'body'       => "Received call from Bob in accounts. Account locked due to too many failed login attempts from mobile. Reset MFA and unlocked account. Bob confirmed access restored.",
+            'source'     => 'web',
+            'is_internal' => false,
+        ]);
+
+        Ticket::create([
+            'company_id' => $company->id,
+            'client_id'  => $client->id,
+            'subject'    => 'Backup job failed overnight — needs investigation',
+            'status'     => 'open',
+            'priority'   => 'urgent',
+            'type'       => 'technical',
+            'source'     => 'email',
+        ])->replies()->create([
+            'contact_id' => $contact?->id,
+            'body'       => "We received an alert that last night's Veeam backup failed at 02:15. Error code: VeeamBackup_E_CANT_CONNECT. Please investigate ASAP as we need backup coverage restored.",
+            'source'     => 'email',
+            'is_internal' => false,
         ]);
     }
 }

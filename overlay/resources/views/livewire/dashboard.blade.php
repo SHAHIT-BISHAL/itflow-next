@@ -67,12 +67,42 @@
         </x-ui.card>
     </div>
 
-    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Open Tickets</p>
-            <p class="mt-2 text-3xl font-semibold text-slate-400">—</p>
-            <p class="text-xs text-slate-400">Coming in Phase 3</p>
+    <div class="mt-6">
+        <x-ui.card title="Open Tickets">
+            <ul class="divide-y divide-slate-100">
+                @forelse ($recentTickets as $ticket)
+                    <li class="flex items-center justify-between py-3 gap-4">
+                        <div class="min-w-0">
+                            <a href="{{ route('tickets.show', $ticket) }}" class="font-medium text-brand-700 hover:underline truncate block">{{ $ticket->subject }}</a>
+                            <p class="text-xs text-slate-500">{{ $ticket->client?->name ?? 'No client' }} · {{ $ticket->assignee?->name ?? 'Unassigned' }}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <x-ui.badge :color="$ticket->priority_color">{{ ucfirst($ticket->priority) }}</x-ui.badge>
+                            <span class="text-xs text-slate-400">{{ $ticket->updated_at->diffForHumans() }}</span>
+                        </div>
+                    </li>
+                @empty
+                    <li class="py-3 text-slate-500">No open tickets.</li>
+                @endforelse
+            </ul>
+            @if ($openTickets > 5)
+                <div class="mt-3">
+                    <a href="{{ route('tickets.index') }}" class="text-xs text-brand-700 hover:underline">View all {{ $openTickets }} open tickets &rarr;</a>
+                </div>
+            @endif
         </x-ui.card>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <a href="{{ route('tickets.index') }}" class="block">
+            <x-ui.card class="hover:border-brand-300 transition">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Open Tickets</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ $openTickets }}</p>
+                @if ($urgentTickets > 0)
+                    <p class="text-xs text-red-500 font-medium mt-1">{{ $urgentTickets }} urgent</p>
+                @endif
+            </x-ui.card>
+        </a>
         <x-ui.card>
             <p class="text-xs uppercase tracking-wide text-slate-500">Revenue MTD</p>
             <p class="mt-2 text-3xl font-semibold text-slate-400">—</p>

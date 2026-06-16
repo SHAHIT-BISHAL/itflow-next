@@ -19,6 +19,7 @@
                         <th class="px-3 py-2">Username</th>
                         <th class="px-3 py-2">Password</th>
                         <th class="px-3 py-2">URL</th>
+                        <th class="px-3 py-2">Access</th>
                         <th class="px-3 py-2"></th>
                     </tr>
                 </thead>
@@ -50,6 +51,20 @@
                                     —
                                 @endif
                             </td>
+                            <td class="px-3 py-3 text-xs text-slate-500">
+                                <div>{{ $entry->access_logs_count }} audited access(es)</div>
+                                @if ($entry->latestAccessLog)
+                                    <div>
+                                        Last {{ str($entry->latestAccessLog->action)->replace('_', ' ') }}
+                                        {{ $entry->latestAccessLog->accessed_at->diffForHumans() }}
+                                        @if ($entry->latestAccessLog->user)
+                                            by {{ $entry->latestAccessLog->user->name }}
+                                        @endif
+                                    </div>
+                                @else
+                                    <div>Never revealed</div>
+                                @endif
+                            </td>
                             <td class="px-3 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <button wire:click="edit({{ $entry->id }})" class="text-slate-400 hover:text-brand-600">
@@ -63,7 +78,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-3 py-8 text-center text-slate-500">No passwords stored yet.</td>
+                            <td colspan="6" class="px-3 py-8 text-center text-slate-500">No passwords stored yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

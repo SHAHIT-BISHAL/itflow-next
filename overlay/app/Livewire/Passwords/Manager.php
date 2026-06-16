@@ -2,8 +2,9 @@
 
 namespace App\Livewire\Passwords;
 
-use App\Models\Password;
 use App\Models\Client;
+use App\Models\Password;
+use App\Models\PasswordAccessLog;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -40,7 +41,7 @@ class Manager extends Component
 
     public function edit(int $id): void
     {
-        $entry = Password::findOrFail($id);
+        $entry = Password::where('client_id', $this->client->id)->findOrFail($id);
         $this->editingId = $entry->id;
         $this->name = $entry->name;
         $this->username = $entry->username;
@@ -48,6 +49,8 @@ class Manager extends Component
         $this->url = $entry->url;
         $this->notes = $entry->notes;
         $this->showModal = true;
+
+        $this->recordAccess($entry, 'edit_reveal');
     }
 
     public function save(): void
@@ -56,7 +59,7 @@ class Manager extends Component
         $data['client_id'] = $this->client->id;
 
         if ($this->editingId) {
-            $entry = Password::findOrFail($this->editingId);
+            $entry = Password::where('client_id', $this->client->id)->findOrFail($this->editingId);
             // If password field left blank on edit, preserve existing encrypted value
             if (empty($data['password'])) {
                 unset($data['password']);
@@ -74,13 +77,15 @@ class Manager extends Component
         if (in_array($id, $this->revealed)) {
             $this->revealed = array_values(array_diff($this->revealed, [$id]));
         } else {
+            $entry = Password::where('client_id', $this->client->id)->findOrFail($id);
             $this->revealed[] = $id;
+            $this->recordAccess($entry, 'reveal');
         }
     }
 
     public function archive(int $id): void
     {
-        Password::findOrFail($id)->update(['archived_at' => now()]);
+        Password::where('client_id', $this->client->id)->findOrFail($id)->update(['archived_at' => now()]);
     }
 
     public function closeModal(): void
@@ -95,9 +100,25 @@ class Manager extends Component
         $passwords = Password::query()
             ->where('client_id', $this->client->id)
             ->active()
+            ->with('latestAccessLog.user')
+            ->withCount('accessLogs')
             ->orderBy('name')
             ->get();
 
         return view('livewire.passwords.manager', ['passwords' => $passwords]);
+    }
+
+    protected function recordAccess(Password $entry, string $action): void
+    {
+        PasswordAccessLog::create([
+            'company_id' => $entry->company_id,
+            'client_id' => $entry->client_id,
+            'password_id' => $entry->id,
+            'user_id' => auth()->id(),
+            'action' => $action,
+            'ip_address' => request()->ip(),
+            'user_agent' => str(request()->userAgent() ?? '')->limit(1000)->toString(),
+            'accessed_at' => now(),
+        ]);
     }
 }

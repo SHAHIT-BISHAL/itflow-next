@@ -41,6 +41,16 @@ class Password extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function accessLogs()
+    {
+        return $this->hasMany(PasswordAccessLog::class);
+    }
+
+    public function latestAccessLog()
+    {
+        return $this->hasOne(PasswordAccessLog::class)->latestOfMany('accessed_at');
+    }
+
     public function scopeActive($query)
     {
         return $query->whereNull('archived_at');
