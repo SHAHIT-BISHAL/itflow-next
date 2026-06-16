@@ -7,6 +7,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property string $name
+ * @property string|null $registrar
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property bool $auto_renew
+ * @property string|null $dns_provider
+ * @property \Illuminate\Support\Carbon|null $ssl_expires_at
+ * @property string|null $ssl_issuer
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client|null $client
+ * @property-read string $expiry_status
+ * @property-read string $ssl_expiry_status
+ */
 class Domain extends Model
 {
     use HasFactory, BelongsToCompany;

@@ -11,16 +11,15 @@
     </div>
 
     <x-ui.card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <x-ui.table>
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-2">Name</th>
-                        <th class="px-3 py-2">Username</th>
-                        <th class="px-3 py-2">Password</th>
-                        <th class="px-3 py-2">URL</th>
-                        <th class="px-3 py-2">Access</th>
-                        <th class="px-3 py-2"></th>
+                        <x-ui.th>Name</x-ui.th>
+                        <x-ui.th>Username</x-ui.th>
+                        <x-ui.th>Password</x-ui.th>
+                        <x-ui.th>URL</x-ui.th>
+                        <x-ui.th>Access</x-ui.th>
+                        <x-ui.th />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -82,8 +81,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.table>
     </x-ui.card>
 
     <x-ui.modal show="$wire.showModal" :title="$editingId ? 'Edit Password' : 'New Password'">

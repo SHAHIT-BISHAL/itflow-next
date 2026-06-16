@@ -6,6 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_reply_id
+ * @property string $filename
+ * @property string $path
+ * @property string|null $mime_type
+ * @property int $size
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read TicketReply $reply
+ * @property-read string $formatted_size
+ */
 class TicketAttachment extends Model
 {
     use HasFactory;

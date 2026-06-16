@@ -10,6 +10,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Crypt;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property string $name
+ * @property string|null $username
+ * @property string|null $password
+ * @property string|null $url
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client|null $client
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PasswordAccessLog> $accessLogs
+ * @property-read PasswordAccessLog|null $latestAccessLog
+ * @property-read string|null $decrypted_password
+ */
 class Password extends Model
 {
     use HasFactory, BelongsToCompany;

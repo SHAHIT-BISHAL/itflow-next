@@ -8,6 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int $client_id
+ * @property string $frequency
+ * @property \Illuminate\Support\Carbon $next_run_at
+ * @property \Illuminate\Support\Carbon|null $last_run_at
+ * @property bool $is_active
+ * @property string|null $notes
+ * @property string $currency
+ * @property int $net_terms
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, RecurringInvoiceItem> $items
+ */
 class RecurringInvoice extends Model
 {
     use HasFactory, BelongsToCompany;

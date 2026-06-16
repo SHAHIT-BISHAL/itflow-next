@@ -7,15 +7,14 @@
     </div>
 
     <x-ui.card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <x-ui.table>
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-2">Name</th>
-                        <th class="px-3 py-2">Email</th>
-                        <th class="px-3 py-2">Role</th>
-                        <th class="px-3 py-2">Status</th>
-                        <th class="px-3 py-2"></th>
+                        <x-ui.th>Name</x-ui.th>
+                        <x-ui.th>Email</x-ui.th>
+                        <x-ui.th>Role</x-ui.th>
+                        <x-ui.th>Status</x-ui.th>
+                        <x-ui.th />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -50,8 +49,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.table>
 
         <div class="mt-4">
             {{ $users->links() }}

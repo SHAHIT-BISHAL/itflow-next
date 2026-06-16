@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $ticket_id
+ * @property int|null $user_id
+ * @property int|null $contact_id
+ * @property string $body
+ * @property bool $is_internal
+ * @property string $source
+ * @property string|null $email_message_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Ticket $ticket
+ * @property-read User|null $user
+ * @property-read Contact|null $contact
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketAttachment> $attachments
+ * @property-read string $author_name
+ * @property-read bool $is_staff
+ */
 class TicketReply extends Model
 {
     use HasFactory;

@@ -13,17 +13,16 @@
     </div>
 
     <x-ui.card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <x-ui.table>
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-2"></th>
-                        <th class="px-3 py-2">Name</th>
-                        <th class="px-3 py-2">Type</th>
-                        <th class="px-3 py-2">Contacts</th>
-                        <th class="px-3 py-2">Locations</th>
-                        <th class="px-3 py-2">Net Terms</th>
-                        <th class="px-3 py-2"></th>
+                        <x-ui.th />
+                        <x-ui.th>Name</x-ui.th>
+                        <x-ui.th>Type</x-ui.th>
+                        <x-ui.th>Contacts</x-ui.th>
+                        <x-ui.th>Locations</x-ui.th>
+                        <x-ui.th>Net Terms</x-ui.th>
+                        <x-ui.th />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -60,8 +59,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.table>
 
         <div class="mt-4">
             {{ $clients->links() }}

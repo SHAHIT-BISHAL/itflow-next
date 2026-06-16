@@ -9,6 +9,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property int|null $company_id
+ * @property string $name
+ * @property string $email
+ * @property string|null $avatar
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Company|null $company
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Client> $permittedClients
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;

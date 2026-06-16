@@ -8,6 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $parent_id
+ * @property string $name
+ * @property string|null $description
+ * @property string $type
+ * @property string|null $color
+ * @property string|null $icon
+ * @property int $sort_order
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Category|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Category> $children
+ */
 class Category extends Model
 {
     use HasFactory, BelongsToCompany;

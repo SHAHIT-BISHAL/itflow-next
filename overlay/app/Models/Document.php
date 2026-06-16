@@ -10,6 +10,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property int|null $category_id
+ * @property int|null $created_by
+ * @property string $title
+ * @property string $document_type
+ * @property string|null $content
+ * @property bool $is_template
+ * @property \Illuminate\Support\Carbon|null $review_due_at
+ * @property \Illuminate\Support\Carbon|null $reviewed_at
+ * @property int|null $reviewed_by
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client|null $client
+ * @property-read Category|null $category
+ * @property-read User|null $createdBy
+ * @property-read User|null $reviewedBy
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, DocumentVersion> $versions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, DocumentRelation> $relations
+ * @property-read DocumentVersion|null $latestVersion
+ * @property-read string $review_status
+ */
 class Document extends Model
 {
     use HasFactory, BelongsToCompany, HasTags;

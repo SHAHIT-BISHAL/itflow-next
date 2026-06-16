@@ -55,71 +55,41 @@
 
     <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         @foreach ($nav as $item)
-            <a href="{{ route($item['route']) }}"
-               class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                      {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                {{ $item['label'] }}
-            </a>
+            <x-ui.nav-link :item="$item" />
         @endforeach
 
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">IT Documentation</p>
             @foreach ($itdoc as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Support</p>
             @foreach ($tickets as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">CRM</p>
             @foreach ($crm as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Billing</p>
             @foreach ($billing as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Reports</p>
             @foreach ($reports as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
@@ -127,12 +97,7 @@
         <div class="pt-4">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Administration</p>
             @foreach ($admin as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-                          {{ $item['active'] ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <x-ui.icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                    {{ $item['label'] }}
-                </a>
+                <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
         @endcan

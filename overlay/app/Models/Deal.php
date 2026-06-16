@@ -8,6 +8,34 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property int|null $contact_id
+ * @property int $pipeline_id
+ * @property int $stage_id
+ * @property int|null $assigned_to
+ * @property string $name
+ * @property string $value
+ * @property string $currency
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $expected_close_date
+ * @property \Illuminate\Support\Carbon|null $closed_at
+ * @property string|null $lost_reason
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Pipeline $pipeline
+ * @property-read PipelineStage $stage
+ * @property-read Client|null $client
+ * @property-read Contact|null $contact
+ * @property-read User|null $assignee
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Activity> $activities
+ * @property-read string $status_color
+ * @property-read string $formatted_value
+ */
 class Deal extends Model
 {
     use HasFactory, BelongsToCompany;

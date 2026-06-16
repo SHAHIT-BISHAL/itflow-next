@@ -8,6 +8,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $client_id
+ * @property string $name
+ * @property string|null $description
+ * @property string|null $address
+ * @property string|null $city
+ * @property string|null $state
+ * @property string|null $zip
+ * @property string|null $country
+ * @property string|null $phone
+ * @property string|null $phone_extension
+ * @property string|null $hours
+ * @property bool $is_primary
+ * @property bool $is_favorite
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $accessed_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Contact> $contacts
+ */
 class Location extends Model
 {
     use HasFactory, HasTags;

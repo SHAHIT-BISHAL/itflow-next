@@ -8,6 +8,34 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int $client_id
+ * @property int|null $contact_id
+ * @property string $invoice_number
+ * @property string $status
+ * @property string $subtotal
+ * @property string $tax_amount
+ * @property string $total
+ * @property string $amount_paid
+ * @property string $currency
+ * @property \Illuminate\Support\Carbon $issue_date
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property string|null $notes
+ * @property string|null $terms
+ * @property \Illuminate\Support\Carbon|null $sent_at
+ * @property \Illuminate\Support\Carbon|null $paid_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read Contact|null $contact
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, InvoiceItem> $items
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read float $amount_due
+ * @property-read string $status_color
+ */
 class Invoice extends Model
 {
     use HasFactory, BelongsToCompany;

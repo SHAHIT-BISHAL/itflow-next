@@ -10,6 +10,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property string $name
+ * @property string|null $type
+ * @property bool $is_lead
+ * @property string|null $website
+ * @property string|null $referral
+ * @property string|null $rate
+ * @property string $currency_code
+ * @property int $net_terms
+ * @property string|null $tax_id_number
+ * @property string|null $abbreviation
+ * @property string|null $notes
+ * @property bool $is_favorite
+ * @property \Illuminate\Support\Carbon|null $accessed_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Contact> $contacts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Location> $locations
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Asset> $assets
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Document> $documents
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Password> $passwords
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Domain> $domains
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Ticket> $tickets
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Deal> $deals
+ * @property-read Contact|null $primaryContact
+ * @property-read Location|null $primaryLocation
+ */
 class Client extends Model
 {
     use HasFactory, BelongsToCompany, HasTags, HasCustomFields;

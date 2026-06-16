@@ -10,6 +10,32 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property int|null $contact_id
+ * @property int|null $assigned_to
+ * @property string $subject
+ * @property string $status
+ * @property string $priority
+ * @property string $type
+ * @property string $source
+ * @property string|null $email_message_id
+ * @property \Illuminate\Support\Carbon|null $sla_due_at
+ * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property \Illuminate\Support\Carbon|null $closed_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client|null $client
+ * @property-read Contact|null $contact
+ * @property-read User|null $assignee
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketReply> $replies
+ * @property-read TicketReply|null $latestReply
+ * @property-read string $priority_color
+ * @property-read string $status_color
+ */
 class Ticket extends Model
 {
     use HasFactory, BelongsToCompany, HasTags;

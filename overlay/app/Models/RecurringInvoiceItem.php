@@ -6,6 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $recurring_invoice_id
+ * @property string $description
+ * @property string $quantity
+ * @property string $unit_price
+ * @property string $tax_rate
+ * @property int $sort_order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read RecurringInvoice $recurringInvoice
+ */
 class RecurringInvoiceItem extends Model
 {
     use HasFactory;
