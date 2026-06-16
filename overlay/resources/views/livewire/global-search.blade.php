@@ -7,8 +7,12 @@
             placeholder="Search anything..."
             @focus="focused = true"
             @keydown.escape="$wire.close()"
-            class="w-72 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+            class="w-72 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
+        <svg wire:loading wire:target="query" class="absolute right-3 top-2.5 h-4 w-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
     </div>
 
     @if($open)

@@ -30,6 +30,8 @@ class Show extends Component
 
     public function mount(Invoice $invoice): void
     {
+        abort_if($invoice->company_id !== Auth::user()->company_id, 404);
+
         $this->invoice = $invoice;
         $this->paymentForm['paid_at']  = today()->format('Y-m-d');
         $this->paymentForm['amount']   = number_format($invoice->amount_due, 2, '.', '');

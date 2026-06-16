@@ -37,6 +37,8 @@ class Show extends Component
 
     public function mount(Deal $deal): void
     {
+        abort_if($deal->company_id !== Auth::user()->company_id, 404);
+
         $this->deal        = $deal;
         $this->editStage   = (string) $deal->stage_id;
         $this->editStatus  = $deal->status;

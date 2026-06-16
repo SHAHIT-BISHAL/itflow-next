@@ -1,11 +1,17 @@
 <div>
     <div class="mb-4 flex items-center justify-between">
         <a href="{{ route('reports.index') }}" class="text-sm text-brand-600 hover:underline">&larr; Reports</a>
-        <select wire:model.live="year" class="rounded-lg border-slate-300 text-sm shadow-sm">
-            @foreach($years as $y)
-                <option value="{{ $y }}">{{ $y }}</option>
-            @endforeach
-        </select>
+        <div class="flex items-center gap-2">
+            <svg wire:loading wire:target="year" class="h-4 w-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <select wire:model.live="year" class="rounded-lg border-slate-300 text-sm shadow-sm">
+                @foreach($years as $y)
+                    <option value="{{ $y }}">{{ $y }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">

@@ -2,6 +2,8 @@
     Global toast container. Driven by Livewire/Alpine events.
     Fire from any Livewire component with:
         $this->dispatch('toast', message: 'Saved', type: 'success');
+    Or across a redirect with a session flash:
+        session()->flash('toast', ['message' => 'Saved', 'type' => 'success']);
     Types: success (default), error, info
 --}}
 <div
@@ -18,6 +20,11 @@
         },
         remove(id) {
             this.toasts = this.toasts.filter(t => t.id !== id);
+        },
+        init() {
+            @if (session()->has('toast'))
+                this.add(@js(session('toast')));
+            @endif
         },
     }"
     @toast.window="add($event.detail)"

@@ -35,7 +35,7 @@ class Index extends Component
         return view('livewire.invoices.index', [
             'invoices'    => $invoices,
             'totalPaid'   => Invoice::active()->where('company_id', $companyId)->where('status', 'paid')->sum('total'),
-            'totalOwed'   => Invoice::active()->where('company_id', $companyId)->whereNotIn('status', ['paid', 'void', 'draft'])->sum('amount_due'),
+            'totalOwed'   => Invoice::active()->where('company_id', $companyId)->whereNotIn('status', ['paid', 'void', 'draft'])->sum(\DB::raw('total - amount_paid')),
             'overdueCount' => Invoice::active()->where('company_id', $companyId)->overdue()->count(),
         ])->layout('components.layouts.app', ['header' => 'Invoices']);
     }

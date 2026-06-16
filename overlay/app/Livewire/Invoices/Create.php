@@ -168,6 +168,13 @@ class Create extends Component
 
         $invoice->recalculate();
 
+        session()->flash('toast', [
+            'message' => $this->invoiceId
+                ? "Invoice {$invoice->invoice_number} updated."
+                : "Invoice {$invoice->invoice_number} created" . ($action === 'send' ? ' and marked sent.' : '.'),
+            'type'    => 'success',
+        ]);
+
         $this->redirect(route('invoices.show', $invoice), navigate: true);
     }
 

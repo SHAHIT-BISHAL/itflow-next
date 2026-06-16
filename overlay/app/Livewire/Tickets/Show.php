@@ -26,6 +26,8 @@ class Show extends Component
 
     public function mount(Ticket $ticket): void
     {
+        abort_if($ticket->company_id !== Auth::user()->company_id, 404);
+
         $this->ticket      = $ticket;
         $this->editStatus   = $ticket->status;
         $this->editPriority = $ticket->priority;

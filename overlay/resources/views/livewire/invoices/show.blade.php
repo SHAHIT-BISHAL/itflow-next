@@ -1,10 +1,6 @@
 <div class="flex gap-6">
     {{-- Invoice body --}}
     <div class="flex-1 min-w-0 space-y-4">
-        @if (session('success'))
-            <div class="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">{{ session('success') }}</div>
-        @endif
-
         <x-ui.card>
             {{-- Invoice header --}}
             <div class="flex items-start justify-between mb-6">
