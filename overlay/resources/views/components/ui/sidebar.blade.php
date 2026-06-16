@@ -42,52 +42,55 @@
 @endphp
 
 <!-- Mobile backdrop -->
-<div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-40 bg-slate-900/50 lg:hidden" @click="sidebarOpen = false"></div>
+<div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden" @click="sidebarOpen = false"></div>
 
 <aside
-    class="fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-900 text-slate-200 transition-transform lg:relative lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-50 flex w-72 transform flex-col bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:relative lg:translate-x-0 lg:shadow-none"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
 >
-    <div class="flex h-16 items-center gap-2 px-5 border-b border-slate-800">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 font-bold text-white">IT</div>
-        <span class="text-lg font-semibold text-white">ITFlow-Next</span>
+    <div class="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-md bg-white text-sm font-black text-slate-950">IT</div>
+        <div>
+            <p class="text-sm font-semibold text-white">ITFlow-Next</p>
+            <p class="text-xs text-slate-400">MSP operations</p>
+        </div>
     </div>
 
-    <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+    <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         @foreach ($nav as $item)
             <x-ui.nav-link :item="$item" />
         @endforeach
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">IT Documentation</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">IT Documentation</p>
             @foreach ($itdoc as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Support</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Support</p>
             @foreach ($tickets as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">CRM</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">CRM</p>
             @foreach ($crm as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Billing</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Billing</p>
             @foreach ($billing as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
         </div>
 
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Reports</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Reports</p>
             @foreach ($reports as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
@@ -95,7 +98,7 @@
 
         @can('manage users')
         <div class="pt-4">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Administration</p>
+            <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Administration</p>
             @foreach ($admin as $item)
                 <x-ui.nav-link :item="$item" />
             @endforeach
@@ -103,7 +106,7 @@
         @endcan
     </nav>
 
-    <div class="border-t border-slate-800 p-4 text-xs text-slate-500">
+    <div class="border-t border-white/10 p-4 text-xs text-slate-500">
         v0.6 · Phase 6 Reports
     </div>
 </aside>
