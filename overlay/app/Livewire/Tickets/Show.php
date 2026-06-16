@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Mail\TicketReplied;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -34,7 +36,7 @@ class Show extends Component
     {
         $this->validate(['replyBody' => 'required|string']);
 
-        $this->ticket->replies()->create([
+        $reply = $this->ticket->replies()->create([
             'user_id'     => Auth::id(),
             'body'        => $this->replyBody,
             'is_internal' => $this->isInternal,
@@ -43,6 +45,12 @@ class Show extends Component
 
         if (! $this->isInternal && $this->ticket->status === 'pending') {
             $this->ticket->update(['status' => 'open']);
+        }
+
+        // Notify the contact if there is one and the reply is not internal
+        if (! $this->isInternal && $this->ticket->contact?->email) {
+            Mail::to($this->ticket->contact->email)
+                ->queue(new TicketReplied($this->ticket, $reply));
         }
 
         $this->replyBody  = '';

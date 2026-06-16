@@ -15,7 +15,13 @@
                         <span class="text-xs text-slate-400">{{ $invoice->issue_date->format('d M Y') }}</span>
                     </div>
                 </div>
-                <a href="{{ route('invoices.index') }}" class="text-xs text-slate-500 hover:text-brand-700" wire:navigate>← Back</a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank"
+                       class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
+                        <x-ui.icon name="arrow-down-tray" class="h-4 w-4" /> PDF
+                    </a>
+                    <a href="{{ route('invoices.index') }}" class="text-xs text-slate-500 hover:text-brand-700" wire:navigate>← Back</a>
+                </div>
             </div>
 
             {{-- Bill to --}}

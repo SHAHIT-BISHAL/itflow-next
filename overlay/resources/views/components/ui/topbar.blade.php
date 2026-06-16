@@ -4,13 +4,9 @@
             <x-ui.icon name="bars-3" class="h-6 w-6" />
         </button>
 
-        <form action="{{ route('clients.index') }}" method="GET" class="hidden sm:block">
-            <div class="relative">
-                <x-ui.icon name="search" class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input type="search" name="search" placeholder="Search clients..."
-                       class="w-72 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:ring-brand-500" />
-            </div>
-        </form>
+        <div class="hidden sm:block">
+            @livewire('global-search')
+        </div>
     </div>
 
     <div class="flex items-center gap-4">

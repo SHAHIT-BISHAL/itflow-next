@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\InvoicePdfController;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
+use App\Livewire\Reports\Overview as ReportsOverview;
+use App\Livewire\Reports\Revenue as ReportsRevenue;
+use App\Livewire\Reports\Tickets as ReportsTickets;
+use App\Livewire\Reports\Expenses as ReportsExpenses;
 use App\Livewire\Admin\Roles\Index as RolesIndex;
 use App\Livewire\Admin\Tags\Index as TagsIndex;
 use App\Livewire\Admin\Users\Index as UsersIndex;
@@ -57,6 +62,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Support — Tickets
     Route::get('tickets', TicketsIndex::class)->name('tickets.index');
     Route::get('tickets/{ticket}', TicketsShow::class)->name('tickets.show');
+
+    // Invoice PDF
+    Route::get('invoices/{invoice}/pdf', InvoicePdfController::class)->name('invoices.pdf');
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', ReportsOverview::class)->name('index');
+        Route::get('revenue', ReportsRevenue::class)->name('revenue');
+        Route::get('tickets', ReportsTickets::class)->name('tickets');
+        Route::get('expenses', ReportsExpenses::class)->name('expenses');
+    });
 
     // Administration
     Route::middleware('permission:manage users')->prefix('admin')->name('admin.')->group(function () {
