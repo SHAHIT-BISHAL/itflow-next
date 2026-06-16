@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Crypt;
 
 class Password extends Model
@@ -36,17 +39,17 @@ class Password extends Model
         }
     }
 
-    public function client()
+    public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
-    public function accessLogs()
+    public function accessLogs(): HasMany
     {
         return $this->hasMany(PasswordAccessLog::class);
     }
 
-    public function latestAccessLog()
+    public function latestAccessLog(): HasOne
     {
         return $this->hasOne(PasswordAccessLog::class)->latestOfMany('accessed_at');
     }

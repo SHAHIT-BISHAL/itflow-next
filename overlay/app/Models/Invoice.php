@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
@@ -28,10 +30,10 @@ class Invoice extends Model
         'archived_at' => 'datetime',
     ];
 
-    public function client()   { return $this->belongsTo(Client::class); }
-    public function contact()  { return $this->belongsTo(Contact::class); }
-    public function items()    { return $this->hasMany(InvoiceItem::class)->orderBy('sort_order'); }
-    public function payments() { return $this->hasMany(Payment::class); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
+    public function items(): HasMany { return $this->hasMany(InvoiceItem::class)->orderBy('sort_order'); }
+    public function payments(): HasMany { return $this->hasMany(Payment::class); }
 
     public function scopeActive($query)  { return $query->whereNull('archived_at'); }
     public function scopeOverdue($query) {

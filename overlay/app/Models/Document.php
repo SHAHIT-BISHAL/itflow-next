@@ -6,6 +6,9 @@ use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Document extends Model
 {
@@ -24,37 +27,37 @@ class Document extends Model
         'archived_at' => 'datetime',
     ];
 
-    public function client()
+    public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function createdBy()
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function reviewedBy()
+    public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    public function versions()
+    public function versions(): HasMany
     {
         return $this->hasMany(DocumentVersion::class)->orderByDesc('version_number');
     }
 
-    public function relations()
+    public function relations(): HasMany
     {
         return $this->hasMany(DocumentRelation::class);
     }
 
-    public function latestVersion()
+    public function latestVersion(): HasOne
     {
         return $this->hasOne(DocumentVersion::class)->latestOfMany('version_number');
     }

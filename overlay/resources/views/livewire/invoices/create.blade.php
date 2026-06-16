@@ -109,15 +109,15 @@
                 <div class="mt-4 border-t border-slate-100 pt-4 space-y-1 text-sm">
                     <div class="flex justify-between text-slate-600">
                         <span>Subtotal</span>
-                        <span>${{ number_format($subtotal, 2) }}</span>
+                        <span>${{ number_format($this->subtotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-slate-600">
                         <span>Tax</span>
-                        <span>${{ number_format($taxTotal, 2) }}</span>
+                        <span>${{ number_format($this->taxTotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-base font-bold text-slate-900 pt-1 border-t border-slate-200">
                         <span>Total</span>
-                        <span>${{ number_format($total, 2) }}</span>
+                        <span>${{ number_format($this->total, 2) }}</span>
                     </div>
                 </div>
             </x-ui.card>

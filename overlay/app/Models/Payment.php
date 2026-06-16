@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
@@ -20,6 +21,6 @@ class Payment extends Model
         'paid_at' => 'date',
     ];
 
-    public function invoice() { return $this->belongsTo(Invoice::class); }
-    public function client()  { return $this->belongsTo(Client::class); }
+    public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
 }

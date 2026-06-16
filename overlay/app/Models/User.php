@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -29,7 +31,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
@@ -37,7 +39,7 @@ class User extends Authenticatable
     /**
      * Client IDs this user is restricted to. Empty = unrestricted (all clients in company).
      */
-    public function permittedClients()
+    public function permittedClients(): BelongsToMany
     {
         return $this->belongsToMany(Client::class, 'user_client_permissions');
     }

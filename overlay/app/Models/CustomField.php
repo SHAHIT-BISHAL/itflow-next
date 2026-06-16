@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomField extends Model
 {
@@ -16,7 +17,7 @@ class CustomField extends Model
         'options' => 'array',
     ];
 
-    public function values()
+    public function values(): HasMany
     {
         return $this->hasMany(CustomFieldValue::class);
     }

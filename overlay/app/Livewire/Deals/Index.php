@@ -112,6 +112,7 @@ class Index extends Component
             'client_id'  => $data['form']['client_id'] ?: null,
             'contact_id' => $data['form']['contact_id'] ?: null,
             'assigned_to' => $data['form']['assigned_to'] ?: null,
+            'expected_close_date' => $data['form']['expected_close_date'] ?: null,
         ]));
         $this->showModal = false;
     }

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecurringInvoice extends Model
 {
@@ -21,8 +23,8 @@ class RecurringInvoice extends Model
         'is_active'   => 'boolean',
     ];
 
-    public function client() { return $this->belongsTo(Client::class); }
-    public function items()  { return $this->hasMany(RecurringInvoiceItem::class)->orderBy('sort_order'); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function items(): HasMany { return $this->hasMany(RecurringInvoiceItem::class)->orderBy('sort_order'); }
 
     public function generateInvoice(): Invoice
     {

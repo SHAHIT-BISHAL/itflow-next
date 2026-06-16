@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecurringInvoiceItem extends Model
 {
@@ -17,5 +18,5 @@ class RecurringInvoiceItem extends Model
         'tax_rate'   => 'decimal:2',
     ];
 
-    public function recurringInvoice() { return $this->belongsTo(RecurringInvoice::class); }
+    public function recurringInvoice(): BelongsTo { return $this->belongsTo(RecurringInvoice::class); }
 }

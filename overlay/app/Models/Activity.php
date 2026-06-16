@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Activity extends Model
 {
@@ -20,10 +21,10 @@ class Activity extends Model
         'completed_at' => 'datetime',
     ];
 
-    public function user()    { return $this->belongsTo(User::class); }
-    public function deal()    { return $this->belongsTo(Deal::class); }
-    public function client()  { return $this->belongsTo(Client::class); }
-    public function contact() { return $this->belongsTo(Contact::class); }
+    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function deal(): BelongsTo { return $this->belongsTo(Deal::class); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
 
     public function getIsCompletedAttribute(): bool { return (bool) $this->completed_at; }
 

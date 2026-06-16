@@ -6,6 +6,9 @@ use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Ticket extends Model
 {
@@ -24,11 +27,11 @@ class Ticket extends Model
         'archived_at' => 'datetime',
     ];
 
-    public function client()      { return $this->belongsTo(Client::class); }
-    public function contact()     { return $this->belongsTo(Contact::class); }
-    public function assignee()    { return $this->belongsTo(User::class, 'assigned_to'); }
-    public function replies()     { return $this->hasMany(TicketReply::class)->orderBy('created_at'); }
-    public function latestReply() { return $this->hasOne(TicketReply::class)->latestOfMany(); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
+    public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
+    public function replies(): HasMany { return $this->hasMany(TicketReply::class)->orderBy('created_at'); }
+    public function latestReply(): HasOne { return $this->hasOne(TicketReply::class)->latestOfMany(); }
 
     public function scopeActive($query)   { return $query->whereNull('archived_at'); }
     public function scopeOpen($query)     { return $query->whereIn('status', ['open', 'pending']); }

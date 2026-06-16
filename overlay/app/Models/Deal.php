@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Deal extends Model
 {
@@ -23,12 +25,12 @@ class Deal extends Model
         'archived_at'         => 'datetime',
     ];
 
-    public function pipeline()   { return $this->belongsTo(Pipeline::class); }
-    public function stage()      { return $this->belongsTo(PipelineStage::class, 'stage_id'); }
-    public function client()     { return $this->belongsTo(Client::class); }
-    public function contact()    { return $this->belongsTo(Contact::class); }
-    public function assignee()   { return $this->belongsTo(User::class, 'assigned_to'); }
-    public function activities() { return $this->hasMany(Activity::class)->orderBy('created_at', 'desc'); }
+    public function pipeline(): BelongsTo { return $this->belongsTo(Pipeline::class); }
+    public function stage(): BelongsTo { return $this->belongsTo(PipelineStage::class, 'stage_id'); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
+    public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
+    public function activities(): HasMany { return $this->hasMany(Activity::class)->orderBy('created_at', 'desc'); }
 
     public function scopeActive($query) { return $query->whereNull('archived_at'); }
     public function scopeOpen($query)   { return $query->where('status', 'open'); }

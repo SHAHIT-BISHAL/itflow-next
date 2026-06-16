@@ -7,6 +7,8 @@ use App\Models\Concerns\HasCustomFields;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Client extends Model
 {
@@ -26,52 +28,52 @@ class Client extends Model
         'archived_at' => 'datetime',
     ];
 
-    public function contacts()
+    public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);
     }
 
-    public function locations()
+    public function locations(): HasMany
     {
         return $this->hasMany(Location::class);
     }
 
-    public function assets()
+    public function assets(): HasMany
     {
         return $this->hasMany(Asset::class);
     }
 
-    public function documents()
+    public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
-    public function passwords()
+    public function passwords(): HasMany
     {
         return $this->hasMany(Password::class);
     }
 
-    public function domains()
+    public function domains(): HasMany
     {
         return $this->hasMany(Domain::class);
     }
 
-    public function tickets()
+    public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
     }
 
-    public function deals()
+    public function deals(): HasMany
     {
         return $this->hasMany(Deal::class);
     }
 
-    public function primaryContact()
+    public function primaryContact(): HasOne
     {
         return $this->hasOne(Contact::class)->where('is_primary', true);
     }
 
-    public function primaryLocation()
+    public function primaryLocation(): HasOne
     {
         return $this->hasOne(Location::class)->where('is_primary', true);
     }
