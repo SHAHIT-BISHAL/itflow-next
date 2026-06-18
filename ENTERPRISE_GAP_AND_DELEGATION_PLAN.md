@@ -687,9 +687,28 @@ enforced end-to-end.
 
 ### Revised immediate critical path (supersedes "next slice" ordering)
 
-0. Stand up `itflow_next_testing` + run the suite green in the PHP environment.
-1. Install the production scheduler cron (unblocks mail + recurring billing).
-2. Company settings + numbering settings (dependency for SLA, tax, billing).
-3. Ticket numbering + event timeline.
+0. **DONE 2026-06-18.** `itflow_next_testing` DB created + granted; full suite
+   green on the VM (41 passed, 163 assertions) against the isolated test DB, live
+   data untouched. `overlay/phpunit.xml` points tests there permanently.
+1. **DONE 2026-06-18.** Production scheduler installed as a systemd timer
+   (`deploy/systemd/`), enabled and verified running `mail:poll`. (No `cron`
+   package on the VM, so a timer is used instead of a crontab line.)
+   Also applied 4 pending live migrations the deployed code needed
+   (company_settings, numbering_settings, ticket_number, ticket_events) — same
+   schema-drift class as the audit_logs incident.
+2. Company settings + numbering settings UI (schema now live).
+3. Ticket numbering surfacing + event timeline UI (schema now live).
 4. Time entries + product/tax catalog (the billing money-loop foundation).
+
+### Still-open production hardening (need owner decision / infra access)
+
+- **APP_ENV/APP_DEBUG audit + `config:cache`/`event:cache`** — confirm prod env
+  values and bake optimized caches. (`route:cache` is currently blocked by two
+  route closures in `routes/web.php` — convert `/` and `/logout` to non-closures
+  first.)
+- **Queue worker** — ticket/invoice mail is dispatched with `->queue()`. Confirm
+  the queue driver; if not `sync`, add a `queue:work` systemd service.
+- **TLS/HTTPS** — app is served over plain HTTP; add a cert + redirect.
+- **Backups** — automated mysqldump + offsite for `itflow_next`.
+- **Log rotation** for `/var/log/itflow-schedule.log`.
 
