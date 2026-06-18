@@ -22,6 +22,13 @@ class Show extends Component
     public string $editPriority  = '';
     public string $editAssignee  = '';
 
+    public array $timeForm = [
+        'minutes'      => '',
+        'description'  => '',
+        'is_billable'  => true,
+        'performed_at' => '',
+    ];
+
     protected array $rules = [
         'replyBody' => 'required|string',
     ];
@@ -37,6 +44,62 @@ class Show extends Component
         $this->editStatus   = $ticket->status;
         $this->editPriority = $ticket->priority;
         $this->editAssignee = (string) ($ticket->assigned_to ?? '');
+        $this->timeForm['performed_at'] = today()->format('Y-m-d');
+    }
+
+    public function logTime(): void
+    {
+        $data = $this->validate([
+            'timeForm.minutes'      => 'required|integer|min:1|max:1440',
+            'timeForm.description'  => 'required|string|max:1000',
+            'timeForm.is_billable'  => 'boolean',
+            'timeForm.performed_at' => 'required|date',
+        ])['timeForm'];
+
+        $entry = $this->ticket->timeEntries()->create([
+            'company_id'   => $this->ticket->company_id,
+            'user_id'      => Auth::id(),
+            'client_id'    => $this->ticket->client_id,
+            'description'  => $data['description'],
+            'minutes'      => $data['minutes'],
+            'performed_at' => $data['performed_at'],
+            'is_billable'  => $data['is_billable'],
+        ]);
+
+        AuditLogger::record('ticket.time_logged', $this->ticket, 'Time logged on ticket.', null, null, [
+            'time_entry_id' => $entry->id,
+            'minutes'       => $entry->minutes,
+        ]);
+        TicketEventRecorder::record(
+            $this->ticket,
+            'ticket.time_logged',
+            "Logged {$entry->formatted_duration}" . ($entry->is_billable ? ' (billable)' : ' (non-billable)') . '.',
+            null,
+            null,
+            ['time_entry_id' => $entry->id],
+        );
+
+        $this->timeForm['minutes']     = '';
+        $this->timeForm['description'] = '';
+        $this->timeForm['is_billable'] = true;
+        $this->ticket->refresh();
+        $this->dispatch('toast', message: "Logged {$entry->formatted_duration}.", type: 'success');
+    }
+
+    public function deleteTimeEntry(int $id): void
+    {
+        $entry = $this->ticket->timeEntries()->whereNull('invoice_id')->find($id);
+
+        if (! $entry) {
+            $this->dispatch('toast', message: 'That time entry cannot be removed (already invoiced or missing).', type: 'error');
+
+            return;
+        }
+
+        $entry->delete();
+        AuditLogger::record('ticket.time_deleted', $this->ticket, 'Time entry removed.', null, null, ['time_entry_id' => $id]);
+        $this->ticket->refresh();
+        $this->dispatch('toast', message: 'Time entry removed.', type: 'info');
     }
 
     public function sendReply(): void
@@ -118,6 +181,7 @@ class Show extends Component
         return view('livewire.tickets.show', [
             'replies' => $this->ticket->replies()->with(['user', 'contact', 'attachments'])->get(),
             'events' => $this->ticket->events()->with('actor')->take(25)->get(),
+            'timeEntries' => $this->ticket->timeEntries()->with('user')->get(),
             'users'   => User::active()->where('company_id', Auth::user()->company_id)->orderBy('name')->get(['id', 'name']),
         ])->layout('components.layouts.app', ['header' => "Ticket {$this->ticket->display_number}"]);
     }

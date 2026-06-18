@@ -71,7 +71,10 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-700">
                                 <x-ui.icon name="ticket" class="h-4 w-4" />
                             </span>
-                            <span class="truncate">{{ $ticket->subject }}</span>
+                            <span class="min-w-0">
+                                <span class="block truncate">{{ $ticket->subject }}</span>
+                                <span class="block font-mono text-xs text-slate-400">{{ $ticket->display_number }}</span>
+                            </span>
                             <x-ui.badge :color="$ticket->priority_color" class="ml-auto shrink-0">{{ $ticket->status }}</x-ui.badge>
                         </a>
                     @endforeach

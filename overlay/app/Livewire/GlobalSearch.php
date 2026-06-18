@@ -41,8 +41,10 @@ class GlobalSearch extends Component
 
             $results['tickets'] = Ticket::where('company_id', $companyId)
                 ->when(Auth::user()->hasClientRestrictions(), fn ($sq) => $sq->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
-                ->where('subject', 'like', "%{$q}%")
-                ->take(4)->get(['id', 'subject', 'status', 'priority']);
+                ->where(fn ($sq) => $sq
+                    ->where('subject', 'like', "%{$q}%")
+                    ->orWhere('ticket_number', 'like', "%{$q}%"))
+                ->take(4)->get(['id', 'ticket_number', 'subject', 'status', 'priority']);
 
             $results['invoices'] = Invoice::where('company_id', $companyId)
                 ->active()

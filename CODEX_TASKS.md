@@ -77,6 +77,76 @@ couple of pages to confirm). This is find-and-replace heavy → ideal for Codex.
 
 ---
 
+---
+
+## Status (2026-06-18)
+
+Tasks 1–5 **DONE** and merged (feature tests, factories+seeder smoke, model
+PHPDoc, PHPStan baseline, Tailwind→component normalization). Foundation Sprint 1–2
+(audit logs, policies, permissions, company/numbering settings, ticket numbering +
+event timeline) also landed and is deployed. Suite is green (41+ passing) against
+the isolated `itflow_next_testing` DB.
+
+Claude is currently building the **Time Entries → billing bridge** slice
+(`time_entries` table/model, ticket-workspace time logging UI, tests). The Sprint 3
+queue below is the parallel mechanical work that compounds toward a full PSA + IT
+documentation system. **Coordinate on `time_entries`:** Claude owns its schema and
+the ticket-side UI; Codex owns the time-to-invoice batch flow that consumes it
+(Task S3-2).
+
+---
+
+## Sprint 3 — PSA money-loop + IT-doc depth (Codex queue)
+
+### S3-1 — Product/Service catalog + tax rates
+Schema + models + factories + admin CRUD + tests:
+- `products` (company_id, name, sku, type [product|service|recurring], description,
+  default_price, default_cost, tax_rate_id, is_active).
+- `tax_rates` (company_id, name, rate, is_default).
+- Wire an optional `product_id` onto `invoice_items` (nullable FK, additive
+  migration) so invoice lines can reference a catalog product without breaking the
+  existing free-text path.
+- Tenant-scoping + policy tests. Don't alter `Invoice::recalculate()`/`nextNumber()`.
+
+### S3-2 — Time-to-invoice batch flow
+Depends on Claude's `time_entries` table (billable, uninvoiced scopes already
+defined). Build:
+- A `BillTimeEntries` service/action: given a client + date range, group uninvoiced
+  billable entries, create a draft invoice with one line per entry (or grouped),
+  stamp `invoice_id`/`invoiced_at` on the consumed entries inside a transaction.
+- A Livewire screen under Billing ("Unbilled time" → select → create invoice).
+- Tests: entries get stamped, totals match, re-running doesn't double-bill.
+
+### S3-3 — SLA policies + business hours
+- `sla_policies` (company_id, name, priority, first_response_minutes,
+  resolution_minutes), `business_hours` (company_id, weekday, open, close).
+- A service that computes `sla_due_at` on ticket create from policy + business hours
+  (the column already exists on `tickets`). Factories + tests for the calculator
+  (skip weekends/off-hours).
+
+### S3-4 — Projects / tasks / milestones (schema MVP)
+- `projects` (company_id, client_id, name, status, budget_hours, starts/ends),
+  `project_tasks` (project_id, title, status, assignee, due, estimated/actual mins),
+  `project_milestones`. Models, factories, tenant scoping, render-only Livewire list.
+  UI depth comes later — Codex lands the spine + tests.
+
+### S3-5 — Network documentation tables (IT Glue depth)
+- `networks` (client_id, name, subnet/CIDR, vlan, gateway, dns, notes),
+  `ip_addresses` (network_id, address, status, asset_id nullable, label).
+  Models, factories, relationship to assets, tests. List UI under a client's
+  Documentation tab.
+
+### S3-6 — Document rich-text + attachments plumbing
+- Storage abstraction for document/ticket attachments (the `ticket_attachments`
+  table exists but has no upload path). Add a polymorphic `attachments` table +
+  `HasAttachments` trait + a Livewire file-upload component. Mechanical/reusable;
+  Claude designs the editor UX on top.
+
+Acceptance for every S3 task: migration + model + factory + tenant-scope test +
+green `php artisan test`; open one branch + PR per task.
+
+---
+
 ## Handoff / coordination notes
 
 - Work on the `codex/review-tenant-scoping` branch or a child of it; open a PR

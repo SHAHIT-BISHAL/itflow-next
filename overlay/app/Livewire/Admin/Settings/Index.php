@@ -63,8 +63,8 @@ class Index extends Component
         $this->timezone = $settings->timezone;
         $this->defaultCurrency = $settings->default_currency;
         $this->taxRate = (string) $settings->tax_rate;
-        $this->defaultNetTerms = $settings->default_net_terms;
-        $this->ticketSlaHours = $settings->ticket_sla_hours;
+        $this->defaultNetTerms = $settings->default_net_terms ?? 30;
+        $this->ticketSlaHours = $settings->ticket_sla_hours ?? 24;
         $this->emailFromName = $settings->email_from_name;
         $this->emailFromAddress = $settings->email_from_address;
         $this->portalName = $settings->portal_name;

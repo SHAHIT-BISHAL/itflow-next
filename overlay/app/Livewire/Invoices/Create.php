@@ -32,6 +32,8 @@ class Create extends Component
 
     public bool $usingGeneratedInvoiceNumber = false;
 
+    public ?string $generatedInvoicePreview = null;
+
     protected function rules(): array
     {
         $companyId = Auth::user()->company_id;
@@ -89,7 +91,8 @@ class Create extends Component
             ])->toArray();
             $this->loadContacts();
         } else {
-            $this->form['invoice_number'] = app(NumberGenerator::class)->preview($companyId, 'invoice');
+            $this->generatedInvoicePreview = app(NumberGenerator::class)->preview($companyId, 'invoice');
+            $this->form['invoice_number'] = $this->generatedInvoicePreview;
             $this->usingGeneratedInvoiceNumber = true;
             $this->form['issue_date']     = today()->format('Y-m-d');
             $this->form['due_date']       = today()->addDays(30)->format('Y-m-d');
@@ -151,7 +154,7 @@ class Create extends Component
 
         $companyId = Auth::user()->company_id;
 
-        if (! $this->invoiceId && $this->usingGeneratedInvoiceNumber) {
+        if (! $this->invoiceId && $this->usingGeneratedInvoiceNumber && $this->form['invoice_number'] === $this->generatedInvoicePreview) {
             $this->form['invoice_number'] = Invoice::nextNumber($companyId);
         }
 

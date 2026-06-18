@@ -36,6 +36,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read User|null $assignee
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketReply> $replies
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketEvent> $events
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TimeEntry> $timeEntries
+ * @property-read int $total_minutes
  * @property-read TicketReply|null $latestReply
  * @property-read string $display_number
  * @property-read string $priority_color
@@ -63,6 +65,7 @@ class Ticket extends Model
     public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
     public function replies(): HasMany { return $this->hasMany(TicketReply::class)->orderBy('created_at'); }
     public function events(): HasMany { return $this->hasMany(TicketEvent::class)->latest(); }
+    public function timeEntries(): HasMany { return $this->hasMany(TimeEntry::class)->latest('performed_at'); }
     public function latestReply(): HasOne { return $this->hasOne(TicketReply::class)->latestOfMany(); }
 
     public function scopeActive($query)   { return $query->whereNull('archived_at'); }
@@ -91,6 +94,11 @@ class Ticket extends Model
     public function getDisplayNumberAttribute(): string
     {
         return $this->ticket_number ?? (string) $this->id;
+    }
+
+    public function getTotalMinutesAttribute(): int
+    {
+        return (int) $this->timeEntries()->sum('minutes');
     }
 
     public function getPriorityColorAttribute(): string

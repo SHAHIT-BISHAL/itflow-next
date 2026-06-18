@@ -169,6 +169,70 @@
             </dl>
         </x-ui.card>
 
+        <x-ui.card title="Time Tracking">
+            @php
+                $totalMin = $timeEntries->sum('minutes');
+                $billableMin = $timeEntries->where('is_billable', true)->sum('minutes');
+                $fmt = fn ($m) => intdiv($m, 60) > 0 ? intdiv($m, 60) . 'h ' . ($m % 60) . 'm' : ($m % 60) . 'm';
+            @endphp
+            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                <div>
+                    <p class="font-semibold text-slate-900">{{ $fmt($totalMin) }}</p>
+                    <p class="text-xs text-slate-500">total logged</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-semibold text-emerald-600">{{ $fmt($billableMin) }}</p>
+                    <p class="text-xs text-slate-500">billable</p>
+                </div>
+            </div>
+
+            {{-- Quick log form --}}
+            <div class="space-y-2 border-b border-slate-100 pb-3">
+                <div class="flex gap-2">
+                    <input type="number" min="1" wire:model="timeForm.minutes" placeholder="Min"
+                        class="w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none" />
+                    <input type="date" wire:model="timeForm.performed_at"
+                        class="flex-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none" />
+                </div>
+                @error('timeForm.minutes') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                <input type="text" wire:model="timeForm.description" placeholder="What did you do?"
+                    class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none" />
+                @error('timeForm.description') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                <label class="flex items-center gap-2 text-xs text-slate-600">
+                    <input type="checkbox" wire:model="timeForm.is_billable" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
+                    Billable
+                </label>
+                <x-ui.button wire:click="logTime" loading="logTime" class="w-full justify-center text-xs">Log Time</x-ui.button>
+            </div>
+
+            {{-- Entries --}}
+            <div class="mt-3 space-y-2">
+                @forelse ($timeEntries as $entry)
+                    <div class="group flex items-start justify-between gap-2 text-xs">
+                        <div class="min-w-0">
+                            <p class="truncate text-slate-700">{{ $entry->description }}</p>
+                            <p class="text-slate-400">
+                                {{ $entry->performed_at->format('d M') }} · {{ $entry->user->name ?? 'Unknown' }}
+                                @unless ($entry->is_billable) · <span class="text-slate-400">non-billable</span> @endunless
+                                @if ($entry->invoice_id) · <span class="text-emerald-600">invoiced</span> @endif
+                            </p>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <span class="font-mono font-medium {{ $entry->is_billable ? 'text-slate-700' : 'text-slate-400' }}">{{ $entry->formatted_duration }}</span>
+                            @unless ($entry->invoice_id)
+                                <button wire:click="deleteTimeEntry({{ $entry->id }})" wire:confirm="Remove this time entry?"
+                                    class="text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500" aria-label="Remove time entry">
+                                    <x-ui.icon name="trash" class="h-3.5 w-3.5" />
+                                </button>
+                            @endunless
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-xs text-slate-500">No time logged yet.</p>
+                @endforelse
+            </div>
+        </x-ui.card>
+
         <x-ui.card title="Timeline">
             <div class="space-y-3">
                 @forelse ($events as $event)
