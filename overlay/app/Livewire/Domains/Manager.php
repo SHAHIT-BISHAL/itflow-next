@@ -4,6 +4,8 @@ namespace App\Livewire\Domains;
 
 use App\Models\Domain;
 use App\Models\Client;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -38,6 +40,13 @@ class Manager extends Component
     #[Validate('nullable|string')]
     public ?string $notes = null;
 
+    public function mount(Client $client): void
+    {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $this->client = $client;
+    }
+
     public function create(): void
     {
         $this->reset(['editingId', 'name', 'registrar', 'expires_at', 'auto_renew',
@@ -47,7 +56,7 @@ class Manager extends Component
 
     public function edit(int $id): void
     {
-        $domain = Domain::findOrFail($id);
+        $domain = Domain::where('client_id', $this->client->id)->findOrFail($id);
         $this->editingId = $domain->id;
         $this->name = $domain->name;
         $this->registrar = $domain->registrar;
@@ -66,9 +75,13 @@ class Manager extends Component
         $data['client_id'] = $this->client->id;
 
         if ($this->editingId) {
-            Domain::findOrFail($this->editingId)->update($data);
+            $domain = Domain::where('client_id', $this->client->id)->findOrFail($this->editingId);
+            $before = AuditLogger::snapshot($domain);
+            $domain->update($data);
+            AuditLogger::record('domain.updated', $domain, 'Domain updated.', $before, AuditLogger::snapshot($domain));
         } else {
-            Domain::create($data);
+            $domain = Domain::create($data);
+            AuditLogger::record('domain.created', $domain, 'Domain added.', null, AuditLogger::snapshot($domain));
         }
 
         $this->closeModal();
@@ -76,7 +89,10 @@ class Manager extends Component
 
     public function archive(int $id): void
     {
-        Domain::findOrFail($id)->update(['archived_at' => now()]);
+        $domain = Domain::where('client_id', $this->client->id)->findOrFail($id);
+        $before = AuditLogger::snapshot($domain);
+        $domain->update(['archived_at' => now()]);
+        AuditLogger::record('domain.archived', $domain, 'Domain archived.', $before, AuditLogger::snapshot($domain));
     }
 
     public function closeModal(): void

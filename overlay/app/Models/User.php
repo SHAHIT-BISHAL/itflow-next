@@ -65,6 +65,10 @@ class User extends Authenticatable
 
     public function canAccessClient(Client $client): bool
     {
+        if ((int) $client->company_id !== (int) $this->company_id) {
+            return false;
+        }
+
         if (! $this->hasClientRestrictions()) {
             return true;
         }

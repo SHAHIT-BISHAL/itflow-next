@@ -4,6 +4,8 @@ namespace App\Livewire\Assets;
 
 use App\Models\Asset;
 use App\Models\Client;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -50,6 +52,13 @@ class Manager extends Component
     #[Validate('nullable|string')]
     public ?string $notes = null;
 
+    public function mount(Client $client): void
+    {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $this->client = $client;
+    }
+
     public function create(): void
     {
         $this->reset(['editingId', 'name', 'asset_type', 'manufacturer', 'model',
@@ -61,7 +70,7 @@ class Manager extends Component
 
     public function edit(int $id): void
     {
-        $asset = Asset::findOrFail($id);
+        $asset = Asset::where('client_id', $this->client->id)->findOrFail($id);
         $this->editingId = $asset->id;
         $this->name = $asset->name;
         $this->asset_type = $asset->asset_type;
@@ -84,9 +93,13 @@ class Manager extends Component
         $data['client_id'] = $this->client->id;
 
         if ($this->editingId) {
-            Asset::findOrFail($this->editingId)->update($data);
+            $asset = Asset::where('client_id', $this->client->id)->findOrFail($this->editingId);
+            $before = AuditLogger::snapshot($asset);
+            $asset->update($data);
+            AuditLogger::record('asset.updated', $asset, 'Asset updated.', $before, AuditLogger::snapshot($asset));
         } else {
-            Asset::create($data);
+            $asset = Asset::create($data);
+            AuditLogger::record('asset.created', $asset, 'Asset created.', null, AuditLogger::snapshot($asset));
         }
 
         $this->closeModal();
@@ -94,7 +107,10 @@ class Manager extends Component
 
     public function archive(int $id): void
     {
-        Asset::findOrFail($id)->update(['archived_at' => now()]);
+        $asset = Asset::where('client_id', $this->client->id)->findOrFail($id);
+        $before = AuditLogger::snapshot($asset);
+        $asset->update(['archived_at' => now()]);
+        AuditLogger::record('asset.archived', $asset, 'Asset archived.', $before, AuditLogger::snapshot($asset));
     }
 
     public function closeModal(): void

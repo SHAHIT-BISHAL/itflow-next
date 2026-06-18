@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Document;
 use App\Models\Domain;
 use App\Models\Password;
+use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,13 @@ class Manager extends Component
 
     /** @var array<int, int> */
     public array $passwordIds = [];
+
+    public function mount(Client $client): void
+    {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $this->client = $client;
+    }
 
     public function create(): void
     {
@@ -82,10 +90,12 @@ class Manager extends Component
         DB::transaction(function () use ($data) {
             if ($this->editingId) {
                 $document = Document::where('client_id', $this->client->id)->findOrFail($this->editingId);
+                $before = AuditLogger::snapshot($document);
                 $shouldVersion = $document->title !== $data['title']
                     || $document->content !== ($data['content'] ?? null);
 
                 $document->update($data);
+                AuditLogger::record('document.updated', $document, 'Document updated.', $before, AuditLogger::snapshot($document));
 
                 if ($shouldVersion) {
                     $this->createVersion($document, 'Document updated');
@@ -94,6 +104,7 @@ class Manager extends Component
                 $data['created_by'] = Auth::id();
                 $document = Document::create($data);
                 $this->createVersion($document, 'Initial version');
+                AuditLogger::record('document.created', $document, 'Document created.', null, AuditLogger::snapshot($document));
             }
 
             $this->syncRelations($document);
@@ -104,17 +115,22 @@ class Manager extends Component
 
     public function delete(int $id): void
     {
-        Document::where('client_id', $this->client->id)->findOrFail($id)->update(['archived_at' => now()]);
+        $document = Document::where('client_id', $this->client->id)->findOrFail($id);
+        $before = AuditLogger::snapshot($document);
+        $document->update(['archived_at' => now()]);
+        AuditLogger::record('document.archived', $document, 'Document archived.', $before, AuditLogger::snapshot($document));
     }
 
     public function markReviewed(int $id): void
     {
         $document = Document::where('client_id', $this->client->id)->findOrFail($id);
+        $before = AuditLogger::snapshot($document);
         $document->update([
             'reviewed_at' => now(),
             'reviewed_by' => Auth::id(),
             'review_due_at' => now()->addMonths(6)->toDateString(),
         ]);
+        AuditLogger::record('document.reviewed', $document, 'Document reviewed.', $before, AuditLogger::snapshot($document));
 
         $this->view($document->id);
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use App\Services\NumberGenerator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -112,9 +113,6 @@ class Invoice extends Model
     // Generate next invoice number for a company
     public static function nextNumber(int $companyId): string
     {
-        $last = static::where('company_id', $companyId)->max('invoice_number');
-        if (! $last) return 'INV-0001';
-        preg_match('/(\d+)$/', $last, $m);
-        return 'INV-' . str_pad((intval($m[1] ?? 0) + 1), 4, '0', STR_PAD_LEFT);
+        return app(NumberGenerator::class)->next($companyId, 'invoice');
     }
 }

@@ -6,6 +6,8 @@ use App\Livewire\Deals\Index as DealsIndex;
 use App\Livewire\Deals\Show as DealsShow;
 use App\Livewire\Expenses\Index as ExpensesIndex;
 use App\Livewire\GlobalSearch;
+use App\Livewire\Admin\AuditLogs\Index as AuditLogsIndex;
+use App\Livewire\Admin\Settings\Index as SettingsIndex;
 use App\Livewire\Invoices\Create as InvoicesCreate;
 use App\Livewire\Invoices\Index as InvoicesIndex;
 use App\Livewire\Invoices\Show as InvoicesShow;
@@ -16,7 +18,9 @@ use App\Livewire\Reports\Tickets as TicketsReport;
 use App\Livewire\Tickets\Index as TicketsIndex;
 use App\Livewire\Tickets\Show as TicketsShow;
 use App\Models\Activity;
+use App\Models\AuditLog;
 use App\Models\Client;
+use App\Models\CompanySetting;
 use App\Models\Company;
 use App\Models\Deal;
 use App\Models\Expense;
@@ -25,8 +29,8 @@ use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\NumberingSetting;
 use App\Models\Ticket;
-use App\Models\TicketReply;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -150,6 +154,17 @@ class PhaseLivewireComponentsTest extends TestCase
             'invoice_id' => $invoice->id,
             'amount' => 200,
             'reference' => 'PAY-001',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => Payment::class,
+            'action' => 'payment.recorded',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => Invoice::class,
+            'subject_id' => $invoice->id,
+            'action' => 'invoice.payment_applied',
         ]);
         $this->assertSame('paid', $invoice->fresh()->status);
         $this->assertSame('200.00', $invoice->fresh()->amount_paid);
@@ -327,10 +342,21 @@ class PhaseLivewireComponentsTest extends TestCase
         $ticket = Ticket::where('subject', 'Created Ticket')->firstOrFail();
 
         $this->assertSame($this->company->id, $ticket->company_id);
+        $this->assertSame('TKT-0002', $ticket->ticket_number);
         $this->assertDatabaseHas('ticket_replies', [
             'ticket_id' => $ticket->id,
             'user_id' => $this->user->id,
             'body' => 'Initial request',
+        ]);
+        $this->assertDatabaseHas('ticket_events', [
+            'company_id' => $this->company->id,
+            'ticket_id' => $ticket->id,
+            'event_type' => 'ticket.created',
+        ]);
+        $this->assertDatabaseHas('ticket_events', [
+            'company_id' => $this->company->id,
+            'ticket_id' => $ticket->id,
+            'event_type' => 'ticket.initial_message_added',
         ]);
     }
 
@@ -358,6 +384,28 @@ class PhaseLivewireComponentsTest extends TestCase
             'user_id' => $this->user->id,
             'body' => 'Working on this now.',
             'is_internal' => false,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => Ticket::class,
+            'subject_id' => $ticket->id,
+            'action' => 'ticket.reply_sent',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => Ticket::class,
+            'subject_id' => $ticket->id,
+            'action' => 'ticket.updated',
+        ]);
+        $this->assertDatabaseHas('ticket_events', [
+            'company_id' => $this->company->id,
+            'ticket_id' => $ticket->id,
+            'event_type' => 'ticket.reply_sent',
+        ]);
+        $this->assertDatabaseHas('ticket_events', [
+            'company_id' => $this->company->id,
+            'ticket_id' => $ticket->id,
+            'event_type' => 'ticket.updated',
         ]);
         $this->assertSame('resolved', $ticket->fresh()->status);
         $this->assertSame('high', $ticket->fresh()->priority);
@@ -477,6 +525,101 @@ class PhaseLivewireComponentsTest extends TestCase
             ->assertSee('ACME-001')
             ->assertSee('Acme Upgrade')
             ->assertDontSee('Acme Hidden');
+    }
+
+    public function test_admin_settings_updates_company_defaults_and_numbering(): void
+    {
+        $this->get(route('admin.settings.index'))->assertOk();
+
+        Livewire::test(SettingsIndex::class)
+            ->set('companyName', 'Updated MSP')
+            ->set('email', 'ops@example.test')
+            ->set('timezone', 'Australia/Sydney')
+            ->set('defaultCurrency', 'AUD')
+            ->set('taxRate', '10.00')
+            ->set('defaultNetTerms', 14)
+            ->set('ticketSlaHours', 8)
+            ->set('emailFromName', 'Updated Support')
+            ->set('emailFromAddress', 'support@example.test')
+            ->call('saveCompanySettings')
+            ->assertHasNoErrors()
+            ->set('numbering.ticket.prefix', 'HD-')
+            ->set('numbering.ticket.next_number', 42)
+            ->set('numbering.ticket.padding', 5)
+            ->call('saveNumbering')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('companies', [
+            'id' => $this->company->id,
+            'name' => 'Updated MSP',
+            'email' => 'ops@example.test',
+            'timezone' => 'Australia/Sydney',
+            'currency' => 'AUD',
+        ]);
+        $this->assertDatabaseHas('company_settings', [
+            'company_id' => $this->company->id,
+            'default_currency' => 'AUD',
+            'tax_rate' => '10.00',
+            'default_net_terms' => 14,
+            'ticket_sla_hours' => 8,
+            'email_from_address' => 'support@example.test',
+        ]);
+        $this->assertDatabaseHas('numbering_settings', [
+            'company_id' => $this->company->id,
+            'type' => 'ticket',
+            'prefix' => 'HD-',
+            'next_number' => 42,
+            'padding' => 5,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => CompanySetting::class,
+            'action' => 'settings.updated',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->company->id,
+            'subject_type' => NumberingSetting::class,
+            'action' => 'numbering.updated',
+        ]);
+
+        $ticket = Ticket::factory()->create([
+            'company_id' => $this->company->id,
+            'client_id' => Client::factory()->create(['company_id' => $this->company->id])->id,
+        ]);
+
+        $this->assertSame('HD-00042', $ticket->ticket_number);
+    }
+
+    public function test_audit_logs_page_is_company_scoped_and_filterable(): void
+    {
+        AuditLog::create([
+            'company_id' => $this->company->id,
+            'actor_type' => User::class,
+            'actor_id' => $this->user->id,
+            'action' => 'client.created',
+            'description' => 'Visible audit row',
+            'ip_address' => '127.0.0.1',
+        ]);
+        AuditLog::create([
+            'company_id' => $this->company->id,
+            'action' => 'payment.recorded',
+            'description' => 'Visible payment row',
+        ]);
+        AuditLog::create([
+            'company_id' => Company::factory()->create()->id,
+            'action' => 'client.created',
+            'description' => 'Hidden audit row',
+        ]);
+
+        $this->get(route('admin.audit-logs.index'))->assertOk();
+
+        Livewire::test(AuditLogsIndex::class)
+            ->assertSee('Visible audit row')
+            ->assertSee('Visible payment row')
+            ->assertDontSee('Hidden audit row')
+            ->set('search', 'payment')
+            ->assertSee('Visible payment row')
+            ->assertDontSee('Visible audit row');
     }
 
     private function pipelineWithStage(Company $company): array

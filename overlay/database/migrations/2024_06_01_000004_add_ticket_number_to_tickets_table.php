@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->string('ticket_number')->nullable()->after('company_id');
+            $table->unique(['company_id', 'ticket_number']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->dropUnique(['company_id', 'ticket_number']);
+            $table->dropColumn('ticket_number');
+        });
+    }
+};

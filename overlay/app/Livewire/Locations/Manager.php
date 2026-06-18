@@ -3,6 +3,7 @@
 namespace App\Livewire\Locations;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -33,6 +34,13 @@ class Manager extends Component
     public ?string $phone = null;
 
     public bool $is_primary = false;
+
+    public function mount(Client $client): void
+    {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $this->client = $client;
+    }
 
     public function create(): void
     {

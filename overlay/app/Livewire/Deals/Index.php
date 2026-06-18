@@ -7,6 +7,7 @@ use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -40,6 +41,7 @@ class Index extends Component
     protected function rules(): array
     {
         $companyId = Auth::user()->company_id;
+        $user = Auth::user();
 
         return [
             'form.name'                => 'required|string|max:255',
@@ -47,7 +49,8 @@ class Index extends Component
                 'nullable',
                 Rule::exists('clients', 'id')->where(fn ($query) => $query
                     ->where('company_id', $companyId)
-                    ->whereNull('archived_at')),
+                    ->whereNull('archived_at')
+                    ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('id', $user->permittedClients()->select('clients.id')))),
             ],
             'form.contact_id'          => [
                 'nullable',
@@ -105,8 +108,15 @@ class Index extends Component
     public function save(): void
     {
         $data = $this->validate();
-        Deal::create(array_merge($data['form'], [
-            'company_id' => Auth::user()->company_id,
+        $user = Auth::user();
+
+        if ($user->hasClientRestrictions() && empty($data['form']['client_id'])) {
+            $this->addError('form.client_id', 'Select an accessible client.');
+            return;
+        }
+
+        $deal = Deal::create(array_merge($data['form'], [
+            'company_id' => $user->company_id,
             'status'     => 'open',
             'value'      => $data['form']['value'] ?: 0,
             'client_id'  => $data['form']['client_id'] ?: null,
@@ -114,6 +124,7 @@ class Index extends Component
             'assigned_to' => $data['form']['assigned_to'] ?: null,
             'expected_close_date' => $data['form']['expected_close_date'] ?: null,
         ]));
+        AuditLogger::record('deal.created', $deal, 'Deal created.', null, AuditLogger::snapshot($deal));
         $this->showModal = false;
     }
 
@@ -122,20 +133,34 @@ class Index extends Component
         $stage = PipelineStage::whereHas('pipeline', fn ($query) => $query->where('company_id', Auth::user()->company_id))
             ->findOrFail($stageId);
 
-        Deal::where('company_id', Auth::user()->company_id)
+        $deal = Deal::where('company_id', Auth::user()->company_id)
             ->where('pipeline_id', $stage->pipeline_id)
-            ->findOrFail($dealId)
-            ->update(['stage_id' => $stage->id]);
+            ->findOrFail($dealId);
+        abort_if($deal->client ? ! Auth::user()->canAccessClient($deal->client) : Auth::user()->hasClientRestrictions(), 404);
+
+        $before = AuditLogger::snapshot($deal);
+        $deal->update(['stage_id' => $stage->id]);
+        AuditLogger::record('deal.stage_changed', $deal, 'Deal stage changed.', $before, AuditLogger::snapshot($deal));
     }
 
     public function markWon(int $dealId): void
     {
-        Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId)->update(['status' => 'won', 'closed_at' => now()]);
+        $deal = Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId);
+        abort_if($deal->client ? ! Auth::user()->canAccessClient($deal->client) : Auth::user()->hasClientRestrictions(), 404);
+
+        $before = AuditLogger::snapshot($deal);
+        $deal->update(['status' => 'won', 'closed_at' => now()]);
+        AuditLogger::record('deal.won', $deal, 'Deal marked won.', $before, AuditLogger::snapshot($deal));
     }
 
     public function markLost(int $dealId, string $reason = ''): void
     {
-        Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId)->update(['status' => 'lost', 'closed_at' => now(), 'lost_reason' => $reason]);
+        $deal = Deal::where('company_id', Auth::user()->company_id)->findOrFail($dealId);
+        abort_if($deal->client ? ! Auth::user()->canAccessClient($deal->client) : Auth::user()->hasClientRestrictions(), 404);
+
+        $before = AuditLogger::snapshot($deal);
+        $deal->update(['status' => 'lost', 'closed_at' => now(), 'lost_reason' => $reason]);
+        AuditLogger::record('deal.lost', $deal, 'Deal marked lost.', $before, AuditLogger::snapshot($deal));
     }
 
     public function updatingSearch(): void  { $this->resetPage(); }
@@ -144,11 +169,13 @@ class Index extends Component
     public function render()
     {
         $companyId = Auth::user()->company_id;
+        $user = Auth::user();
         $pipelines = Pipeline::where('company_id', $companyId)->with('stages')->orderBy('sort_order')->get();
         $activePipeline = $pipelines->firstWhere('id', $this->pipelineId) ?? $pipelines->first();
 
         $dealsQuery = Deal::active()
             ->where('company_id', $companyId)
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))
             ->with(['client', 'stage', 'assignee'])
             ->when($this->search,   fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
             ->when($this->status,   fn ($q) => $q->where('status', $this->status))
@@ -167,10 +194,10 @@ class Index extends Component
             'pipelines'      => $pipelines,
             'activePipeline' => $activePipeline,
             'kanbanDeals'    => $kanbanDeals,
-            'clients'        => Client::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
+            'clients'        => Client::active()->where('company_id', $companyId)->visibleTo($user)->orderBy('name')->get(['id', 'name']),
             'users'          => User::active()->where('company_id', $companyId)->orderBy('name')->get(['id', 'name']),
-            'totalValue'     => Deal::active()->where('company_id', $companyId)->open()->sum('value'),
-            'openCount'      => Deal::active()->where('company_id', $companyId)->open()->count(),
+            'totalValue'     => Deal::active()->where('company_id', $companyId)->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))->open()->sum('value'),
+            'openCount'      => Deal::active()->where('company_id', $companyId)->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))->open()->count(),
         ])->layout('components.layouts.app', ['header' => 'Deals']);
     }
 }

@@ -11,6 +11,7 @@ class InvoicePdfController extends Controller
     public function __invoke(Invoice $invoice)
     {
         abort_unless($invoice->company_id === Auth::user()->company_id, 403);
+        abort_unless(Auth::user()->canAccessClient($invoice->client), 403);
 
         $invoice->load(['client', 'contact', 'items', 'payments']);
 

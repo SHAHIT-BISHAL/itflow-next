@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\HasTags;
+use App\Services\NumberGenerator;
+use App\Services\TicketEventRecorder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property int $id
  * @property int $company_id
+ * @property string|null $ticket_number
  * @property int|null $client_id
  * @property int|null $contact_id
  * @property int|null $assigned_to
@@ -32,7 +35,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Contact|null $contact
  * @property-read User|null $assignee
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketReply> $replies
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketEvent> $events
  * @property-read TicketReply|null $latestReply
+ * @property-read string $display_number
  * @property-read string $priority_color
  * @property-read string $status_color
  */
@@ -41,7 +46,7 @@ class Ticket extends Model
     use HasFactory, BelongsToCompany, HasTags;
 
     protected $fillable = [
-        'company_id', 'client_id', 'contact_id', 'assigned_to',
+        'company_id', 'ticket_number', 'client_id', 'contact_id', 'assigned_to',
         'subject', 'status', 'priority', 'type', 'source',
         'email_message_id', 'sla_due_at', 'resolved_at', 'closed_at', 'archived_at',
     ];
@@ -57,11 +62,36 @@ class Ticket extends Model
     public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
     public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
     public function replies(): HasMany { return $this->hasMany(TicketReply::class)->orderBy('created_at'); }
+    public function events(): HasMany { return $this->hasMany(TicketEvent::class)->latest(); }
     public function latestReply(): HasOne { return $this->hasOne(TicketReply::class)->latestOfMany(); }
 
     public function scopeActive($query)   { return $query->whereNull('archived_at'); }
     public function scopeOpen($query)     { return $query->whereIn('status', ['open', 'pending']); }
     public function scopeStatus($query, string $status) { return $query->where('status', $status); }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Ticket $ticket) {
+            if (! $ticket->ticket_number && $ticket->company_id) {
+                $ticket->ticket_number = app(NumberGenerator::class)->next((int) $ticket->company_id, 'ticket');
+            }
+        });
+
+        static::created(function (Ticket $ticket) {
+            TicketEventRecorder::record(
+                $ticket,
+                'ticket.created',
+                'Ticket created.',
+                null,
+                $ticket->getAttributes(),
+            );
+        });
+    }
+
+    public function getDisplayNumberAttribute(): string
+    {
+        return $this->ticket_number ?? (string) $this->id;
+    }
 
     public function getPriorityColorAttribute(): string
     {

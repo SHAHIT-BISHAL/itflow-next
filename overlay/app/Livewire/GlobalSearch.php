@@ -35,20 +35,24 @@ class GlobalSearch extends Component
 
             $results['clients'] = Client::where('company_id', $companyId)
                 ->active()
+                ->visibleTo(Auth::user())
                 ->where('name', 'like', "%{$q}%")
                 ->take(4)->get(['id', 'name']);
 
             $results['tickets'] = Ticket::where('company_id', $companyId)
+                ->when(Auth::user()->hasClientRestrictions(), fn ($sq) => $sq->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
                 ->where('subject', 'like', "%{$q}%")
                 ->take(4)->get(['id', 'subject', 'status', 'priority']);
 
             $results['invoices'] = Invoice::where('company_id', $companyId)
                 ->active()
+                ->when(Auth::user()->hasClientRestrictions(), fn ($sq) => $sq->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
                 ->where(fn ($sq) => $sq->where('invoice_number', 'like', "%{$q}%"))
                 ->take(4)->get(['id', 'invoice_number', 'status', 'total']);
 
             $results['deals'] = Deal::where('company_id', $companyId)
                 ->active()
+                ->when(Auth::user()->hasClientRestrictions(), fn ($sq) => $sq->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
                 ->where('name', 'like', "%{$q}%")
                 ->take(4)->get(['id', 'name', 'status']);
         }

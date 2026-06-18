@@ -46,7 +46,7 @@
                         <tr class="hover:bg-slate-50/80">
                             <td class="px-4 py-3">
                                 <div class="flex items-start gap-3">
-                                    <span class="mt-0.5 rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-500">#{{ $ticket->id }}</span>
+                                    <span class="mt-0.5 rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-500">{{ $ticket->display_number }}</span>
                                     <div class="min-w-0">
                                         <a href="{{ route('tickets.show', $ticket) }}" class="block truncate font-semibold text-slate-950 hover:text-brand-700" wire:navigate>
                                             {{ $ticket->subject }}

@@ -18,15 +18,18 @@ class Revenue extends Component
 
     public function render()
     {
-        $companyId = Auth::user()->company_id;
+        $user = Auth::user();
+        $companyId = $user->company_id;
 
         $months = collect(range(1, 12))->map(function ($m) use ($companyId) {
             $label = \Carbon\Carbon::create($this->year, $m)->format('M');
             $revenue = Payment::whereYear('paid_at', $this->year)
                 ->whereMonth('paid_at', $m)
+                ->when(Auth::user()->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
                 ->whereHas('invoice', fn ($q) => $q->where('company_id', $companyId))
                 ->sum('amount');
             $expenses = \App\Models\Expense::where('company_id', $companyId)
+                ->when(Auth::user()->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', Auth::user()->permittedClients()->select('clients.id')))
                 ->whereYear('expense_date', $this->year)
                 ->whereMonth('expense_date', $m)
                 ->sum('amount');
@@ -41,6 +44,7 @@ class Revenue extends Component
         $topClients = Payment::selectRaw('invoices.client_id, SUM(payments.amount) as total')
             ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
             ->where('invoices.company_id', $companyId)
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('invoices.client_id', $user->permittedClients()->select('clients.id')))
             ->whereYear('payments.paid_at', $this->year)
             ->groupBy('invoices.client_id')
             ->orderByDesc('total')

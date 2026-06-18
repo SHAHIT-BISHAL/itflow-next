@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Client> $clients
+ * @property-read CompanySetting|null $settings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, NumberingSetting> $numberingSettings
  */
 class Company extends Model
 {
@@ -43,5 +46,15 @@ class Company extends Model
     public function clients(): HasMany
     {
         return $this->hasMany(Client::class);
+    }
+
+    public function settings(): HasOne
+    {
+        return $this->hasOne(CompanySetting::class);
+    }
+
+    public function numberingSettings(): HasMany
+    {
+        return $this->hasMany(NumberingSetting::class);
     }
 }

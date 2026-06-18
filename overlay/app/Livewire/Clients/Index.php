@@ -3,6 +3,8 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Client;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -50,6 +52,7 @@ class Index extends Component
     public function edit(int $id): void
     {
         $client = Client::findOrFail($id);
+        abort_if(! Auth::user()->canAccessClient($client), 404);
 
         $this->editingId = $client->id;
         $this->name = $client->name;
@@ -67,10 +70,16 @@ class Index extends Component
         $data = $this->validate();
 
         if ($this->editingId) {
-            Client::findOrFail($this->editingId)->update($data);
+            $client = Client::findOrFail($this->editingId);
+            abort_if(! Auth::user()->canAccessClient($client), 404);
+
+            $before = AuditLogger::snapshot($client);
+            $client->update($data);
+            AuditLogger::record('client.updated', $client, 'Client updated.', $before, AuditLogger::snapshot($client));
             $message = 'Client updated.';
         } else {
-            Client::create($data);
+            $client = Client::create($data);
+            AuditLogger::record('client.created', $client, 'Client created.', null, AuditLogger::snapshot($client));
             $message = 'Client created.';
         }
 
@@ -81,12 +90,21 @@ class Index extends Component
     public function toggleFavorite(int $id): void
     {
         $client = Client::findOrFail($id);
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $before = AuditLogger::snapshot($client);
         $client->update(['is_favorite' => ! $client->is_favorite]);
+        AuditLogger::record('client.favorite_toggled', $client, 'Client favorite toggled.', $before, AuditLogger::snapshot($client));
     }
 
     public function archive(int $id): void
     {
-        Client::findOrFail($id)->update(['archived_at' => now()]);
+        $client = Client::findOrFail($id);
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $before = AuditLogger::snapshot($client);
+        $client->update(['archived_at' => now()]);
+        AuditLogger::record('client.archived', $client, 'Client archived.', $before, AuditLogger::snapshot($client));
         session()->flash('success', 'Client archived.');
     }
 
@@ -99,8 +117,11 @@ class Index extends Component
 
     public function render()
     {
+        $user = Auth::user();
+
         $clients = Client::query()
             ->active()
+            ->visibleTo($user)
             ->search($this->search)
             ->orderByDesc('is_favorite')
             ->orderBy('name')

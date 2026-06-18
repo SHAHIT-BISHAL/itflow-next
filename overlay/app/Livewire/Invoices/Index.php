@@ -19,10 +19,12 @@ class Index extends Component
 
     public function render()
     {
-        $companyId = Auth::user()->company_id;
+        $user = Auth::user();
+        $companyId = $user->company_id;
 
         $invoices = Invoice::active()
             ->where('company_id', $companyId)
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))
             ->with(['client'])
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('invoice_number', 'like', "%{$this->search}%")
@@ -34,9 +36,9 @@ class Index extends Component
 
         return view('livewire.invoices.index', [
             'invoices'    => $invoices,
-            'totalPaid'   => Invoice::active()->where('company_id', $companyId)->where('status', 'paid')->sum('total'),
-            'totalOwed'   => Invoice::active()->where('company_id', $companyId)->whereNotIn('status', ['paid', 'void', 'draft'])->sum(\DB::raw('total - amount_paid')),
-            'overdueCount' => Invoice::active()->where('company_id', $companyId)->overdue()->count(),
+            'totalPaid'   => Invoice::active()->where('company_id', $companyId)->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))->where('status', 'paid')->sum('total'),
+            'totalOwed'   => Invoice::active()->where('company_id', $companyId)->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))->whereNotIn('status', ['paid', 'void', 'draft'])->sum(\DB::raw('total - amount_paid')),
+            'overdueCount' => Invoice::active()->where('company_id', $companyId)->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))->overdue()->count(),
         ])->layout('components.layouts.app', ['header' => 'Invoices']);
     }
 }

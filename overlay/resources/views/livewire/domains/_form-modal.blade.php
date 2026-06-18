@@ -2,6 +2,20 @@
     <form wire:submit="save" class="space-y-4">
         <x-ui.input name="name" label="Domain Name" wire:model="name" placeholder="example.com" :error="$errors->first('name')" />
 
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Client</label>
+            <select wire:model="client_id" name="client_id"
+                    class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm">
+                <option value="">No client</option>
+                @foreach ($clients as $client)
+                    <option value="{{ $client->id }}">{{ $client->name }}</option>
+                @endforeach
+            </select>
+            @error('client_id')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
             <x-ui.input name="registrar" label="Registrar" wire:model="registrar" :error="$errors->first('registrar')" />
             <x-ui.input name="dns_provider" label="DNS Provider" wire:model="dns_provider" :error="$errors->first('dns_provider')" />

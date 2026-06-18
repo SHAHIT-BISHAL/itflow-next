@@ -122,4 +122,15 @@ class Client extends Model
     {
         return $query->when($term, fn ($q) => $q->where('name', 'like', "%{$term}%"));
     }
+
+    public function scopeVisibleTo($query, User $user)
+    {
+        $table = $query->getModel()->getTable();
+
+        return $query
+            ->where("{$table}.company_id", $user->company_id)
+            ->when($user->hasClientRestrictions(), function ($q) use ($table, $user) {
+                $q->whereIn("{$table}.id", $user->permittedClients()->select('clients.id'));
+            });
+    }
 }

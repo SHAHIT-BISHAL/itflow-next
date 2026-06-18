@@ -5,6 +5,8 @@ namespace App\Livewire\Invoices;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Invoice;
+use App\Services\AuditLogger;
+use App\Services\NumberGenerator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -28,16 +30,20 @@ class Create extends Component
 
     public array $contacts = [];
 
+    public bool $usingGeneratedInvoiceNumber = false;
+
     protected function rules(): array
     {
         $companyId = Auth::user()->company_id;
+        $user = Auth::user();
 
         return [
             'form.client_id'      => [
                 'required',
                 Rule::exists('clients', 'id')->where(fn ($query) => $query
                     ->where('company_id', $companyId)
-                    ->whereNull('archived_at')),
+                    ->whereNull('archived_at')
+                    ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('id', $user->permittedClients()->select('clients.id')))),
             ],
             'form.contact_id'     => [
                 'nullable',
@@ -70,6 +76,7 @@ class Create extends Component
 
         if ($invoice && $invoice->exists) {
             abort_if($invoice->company_id !== $companyId, 404);
+            abort_if(! Auth::user()->canAccessClient($invoice->client), 404);
 
             $this->invoiceId = $invoice->id;
             $this->form = $invoice->only(['client_id', 'contact_id', 'invoice_number', 'currency', 'notes', 'terms'])
@@ -82,11 +89,17 @@ class Create extends Component
             ])->toArray();
             $this->loadContacts();
         } else {
-            $this->form['invoice_number'] = Invoice::nextNumber($companyId);
+            $this->form['invoice_number'] = app(NumberGenerator::class)->preview($companyId, 'invoice');
+            $this->usingGeneratedInvoiceNumber = true;
             $this->form['issue_date']     = today()->format('Y-m-d');
             $this->form['due_date']       = today()->addDays(30)->format('Y-m-d');
             $this->addItem();
         }
+    }
+
+    public function updatedFormInvoiceNumber(): void
+    {
+        $this->usingGeneratedInvoiceNumber = false;
     }
 
     public function updatedFormClientId(): void
@@ -100,7 +113,7 @@ class Create extends Component
         $this->contacts = $this->form['client_id']
             ? Contact::active()
                 ->where('client_id', $this->form['client_id'])
-                ->whereHas('client', fn ($query) => $query->where('company_id', Auth::user()->company_id))
+                ->whereHas('client', fn ($query) => $query->visibleTo(Auth::user()))
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->toArray()
@@ -138,6 +151,10 @@ class Create extends Component
 
         $companyId = Auth::user()->company_id;
 
+        if (! $this->invoiceId && $this->usingGeneratedInvoiceNumber) {
+            $this->form['invoice_number'] = Invoice::nextNumber($companyId);
+        }
+
         $invoiceData = array_merge($this->form, [
             'company_id' => $companyId,
             'status'     => $action === 'send' ? 'sent' : 'draft',
@@ -148,10 +165,14 @@ class Create extends Component
 
         if ($this->invoiceId) {
             $invoice = Invoice::where('company_id', $companyId)->findOrFail($this->invoiceId);
+            abort_if(! Auth::user()->canAccessClient($invoice->client), 404);
+
+            $before = AuditLogger::snapshot($invoice);
             $invoice->update($invoiceData);
             $invoice->items()->delete();
         } else {
             $invoice = Invoice::create($invoiceData);
+            $before = null;
         }
 
         foreach ($this->items as $i => $item) {
@@ -167,6 +188,13 @@ class Create extends Component
         }
 
         $invoice->recalculate();
+        AuditLogger::record(
+            $this->invoiceId ? 'invoice.updated' : 'invoice.created',
+            $invoice,
+            $this->invoiceId ? 'Invoice updated.' : 'Invoice created.',
+            $before,
+            AuditLogger::snapshot($invoice),
+        );
 
         session()->flash('toast', [
             'message' => $this->invoiceId
@@ -181,7 +209,7 @@ class Create extends Component
     public function render()
     {
         return view('livewire.invoices.create', [
-            'clients'  => Client::active()->where('company_id', Auth::user()->company_id)->orderBy('name')->get(['id', 'name']),
+            'clients'  => Client::active()->where('company_id', Auth::user()->company_id)->visibleTo(Auth::user())->orderBy('name')->get(['id', 'name']),
             'contacts' => $this->contacts,
         ])->layout('components.layouts.app', ['header' => $this->invoiceId ? 'Edit Invoice' : 'New Invoice']);
     }

@@ -5,6 +5,7 @@ namespace App\Livewire\Deals;
 use App\Models\Activity;
 use App\Models\Deal;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -37,7 +38,10 @@ class Show extends Component
 
     public function mount(Deal $deal): void
     {
-        abort_if($deal->company_id !== Auth::user()->company_id, 404);
+        $user = Auth::user();
+
+        abort_if($deal->company_id !== $user->company_id, 404);
+        abort_if($deal->client ? ! $user->canAccessClient($deal->client) : $user->hasClientRestrictions(), 404);
 
         $this->deal        = $deal;
         $this->editStage   = (string) $deal->stage_id;
@@ -47,6 +51,8 @@ class Show extends Component
 
     public function updateMeta(): void
     {
+        $before = AuditLogger::snapshot($this->deal);
+
         $data = $this->validate([
             'editStage'    => [
                 'required',
@@ -68,6 +74,7 @@ class Show extends Component
             'closed_at'   => in_array($data['editStatus'], ['won', 'lost']) ? ($this->deal->closed_at ?? now()) : null,
         ]);
         $this->deal->refresh();
+        AuditLogger::record('deal.updated', $this->deal, 'Deal metadata updated.', $before, AuditLogger::snapshot($this->deal));
         $this->dispatch('toast', message: 'Deal updated.', type: 'success');
     }
 
@@ -80,7 +87,7 @@ class Show extends Component
     public function saveActivity(): void
     {
         $data = $this->validate($this->activityRules);
-        Activity::create(array_merge($data['activityForm'], [
+        $activity = Activity::create(array_merge($data['activityForm'], [
             'company_id' => Auth::user()->company_id,
             'user_id'    => Auth::id(),
             'deal_id'    => $this->deal->id,
@@ -88,6 +95,10 @@ class Show extends Component
             'contact_id' => $this->deal->contact_id,
             'due_at'     => $data['activityForm']['due_at'] ?: null,
         ]));
+        AuditLogger::record('deal.activity_logged', $this->deal, 'Deal activity logged.', null, null, [
+            'activity_id' => $activity->id,
+            'activity_type' => $activity->type,
+        ]);
         $this->showActivityModal = false;
         $this->deal->refresh();
         $this->dispatch('toast', message: ucfirst($data['activityForm']['type']) . ' logged.', type: 'success');
@@ -95,10 +106,16 @@ class Show extends Component
 
     public function completeActivity(int $id): void
     {
-        Activity::where('company_id', Auth::user()->company_id)
+        $activity = Activity::where('company_id', Auth::user()->company_id)
             ->where('deal_id', $this->deal->id)
-            ->findOrFail($id)
-            ->update(['completed_at' => now()]);
+            ->findOrFail($id);
+
+        $before = AuditLogger::snapshot($activity);
+        $activity->update(['completed_at' => now()]);
+        AuditLogger::record('deal.activity_completed', $this->deal, 'Deal activity completed.', null, null, [
+            'activity_id' => $activity->id,
+            'activity_before' => $before,
+        ]);
         $this->deal->refresh();
     }
 

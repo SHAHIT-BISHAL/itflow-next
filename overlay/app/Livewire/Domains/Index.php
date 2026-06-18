@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Domains;
 
+use App\Models\Client;
 use App\Models\Domain;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,6 +44,7 @@ class Index extends Component
     #[Validate('nullable|string')]
     public ?string $notes = null;
 
+    #[Validate('nullable|integer')]
     public ?int $client_id = null;
 
     public function updatingSearch(): void { $this->resetPage(); }
@@ -55,7 +59,10 @@ class Index extends Component
 
     public function edit(int $id): void
     {
+        $user = Auth::user();
         $domain = Domain::findOrFail($id);
+        abort_if($domain->client ? ! $user->canAccessClient($domain->client) : $user->hasClientRestrictions(), 404);
+
         $this->editingId = $domain->id;
         $this->name = $domain->name;
         $this->registrar = $domain->registrar;
@@ -72,12 +79,31 @@ class Index extends Component
     public function save(): void
     {
         $data = $this->validate();
+        $user = Auth::user();
+
+        if ($this->client_id) {
+            $client = Client::active()->visibleTo($user)->find($this->client_id);
+
+            if (! $client) {
+                $this->addError('client_id', 'Select an accessible client.');
+                return;
+            }
+        } elseif ($user->hasClientRestrictions()) {
+            $this->addError('client_id', 'Select an accessible client.');
+            return;
+        }
 
         if ($this->editingId) {
-            Domain::findOrFail($this->editingId)->update($data);
+            $domain = Domain::findOrFail($this->editingId);
+            abort_if($domain->client ? ! $user->canAccessClient($domain->client) : $user->hasClientRestrictions(), 404);
+
+            $before = AuditLogger::snapshot($domain);
+            $domain->update($data);
+            AuditLogger::record('domain.updated', $domain, 'Domain updated.', $before, AuditLogger::snapshot($domain));
             $message = 'Domain updated.';
         } else {
-            Domain::create($data);
+            $domain = Domain::create($data);
+            AuditLogger::record('domain.created', $domain, 'Domain added.', null, AuditLogger::snapshot($domain));
             $message = 'Domain added.';
         }
 
@@ -87,7 +113,13 @@ class Index extends Component
 
     public function archive(int $id): void
     {
-        Domain::findOrFail($id)->update(['archived_at' => now()]);
+        $user = Auth::user();
+        $domain = Domain::findOrFail($id);
+        abort_if($domain->client ? ! $user->canAccessClient($domain->client) : $user->hasClientRestrictions(), 404);
+
+        $before = AuditLogger::snapshot($domain);
+        $domain->update(['archived_at' => now()]);
+        AuditLogger::record('domain.archived', $domain, 'Domain archived.', $before, AuditLogger::snapshot($domain));
         session()->flash('success', 'Domain removed.');
     }
 
@@ -101,9 +133,12 @@ class Index extends Component
 
     public function render()
     {
+        $user = Auth::user();
+
         $query = Domain::query()
             ->with('client')
             ->active()
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))
             ->search($this->search);
 
         if ($this->filterStatus === 'expiring') {
@@ -116,13 +151,20 @@ class Index extends Component
 
         $domains = $query->orderBy('expires_at')->paginate(20);
 
+        $statsQuery = Domain::active()
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')));
+
         $stats = [
-            'total' => Domain::active()->count(),
-            'expiring' => Domain::active()->expiringSoon()->count(),
-            'expired' => Domain::active()->where('expires_at', '<', now())->count(),
+            'total' => (clone $statsQuery)->count(),
+            'expiring' => (clone $statsQuery)->expiringSoon()->count(),
+            'expired' => (clone $statsQuery)->where('expires_at', '<', now())->count(),
         ];
 
-        return view('livewire.domains.index', compact('domains', 'stats'))
+        return view('livewire.domains.index', [
+            'domains' => $domains,
+            'stats' => $stats,
+            'clients' => Client::active()->visibleTo($user)->orderBy('name')->get(['id', 'name']),
+        ])
             ->layout('components.layouts.app', ['header' => 'Domains & Certificates']);
     }
 }

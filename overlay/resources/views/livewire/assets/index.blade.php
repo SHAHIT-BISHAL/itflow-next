@@ -104,6 +104,20 @@
             <div class="grid grid-cols-2 gap-4">
                 <x-ui.input name="name" label="Name" wire:model="name" :error="$errors->first('name')" class="col-span-2" />
 
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Client</label>
+                    <select wire:model="client_id" name="client_id"
+                            class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm">
+                        <option value="">Select client</option>
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('client_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
                     <select wire:model="asset_type" name="asset_type"
