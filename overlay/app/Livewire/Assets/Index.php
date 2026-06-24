@@ -3,6 +3,9 @@
 namespace App\Livewire\Assets;
 
 use App\Models\Asset;
+use App\Models\Client;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -53,6 +56,7 @@ class Index extends Component
     #[Validate('nullable|string')]
     public ?string $notes = null;
 
+    #[Validate('required|integer')]
     public ?int $client_id = null;
 
     public function updatingSearch(): void { $this->resetPage(); }
@@ -70,6 +74,8 @@ class Index extends Component
     public function edit(int $id): void
     {
         $asset = Asset::findOrFail($id);
+        abort_if(! $asset->client || ! Auth::user()->canAccessClient($asset->client), 404);
+
         $this->editingId = $asset->id;
         $this->name = $asset->name;
         $this->asset_type = $asset->asset_type;
@@ -90,12 +96,26 @@ class Index extends Component
     public function save(): void
     {
         $data = $this->validate();
+        $client = Client::active()->visibleTo(Auth::user())->find($this->client_id);
+
+        if (! $client) {
+            $this->addError('client_id', 'Select an accessible client.');
+            return;
+        }
+
+        $data['client_id'] = $client->id;
 
         if ($this->editingId) {
-            Asset::findOrFail($this->editingId)->update($data);
+            $asset = Asset::findOrFail($this->editingId);
+            abort_if(! $asset->client || ! Auth::user()->canAccessClient($asset->client), 404);
+
+            $before = AuditLogger::snapshot($asset);
+            $asset->update($data);
+            AuditLogger::record('asset.updated', $asset, 'Asset updated.', $before, AuditLogger::snapshot($asset));
             $message = 'Asset updated.';
         } else {
-            Asset::create($data);
+            $asset = Asset::create($data);
+            AuditLogger::record('asset.created', $asset, 'Asset created.', null, AuditLogger::snapshot($asset));
             $message = 'Asset created.';
         }
 
@@ -105,7 +125,12 @@ class Index extends Component
 
     public function archive(int $id): void
     {
-        Asset::findOrFail($id)->update(['archived_at' => now()]);
+        $asset = Asset::findOrFail($id);
+        abort_if(! $asset->client || ! Auth::user()->canAccessClient($asset->client), 404);
+
+        $before = AuditLogger::snapshot($asset);
+        $asset->update(['archived_at' => now()]);
+        AuditLogger::record('asset.archived', $asset, 'Asset archived.', $before, AuditLogger::snapshot($asset));
         session()->flash('success', 'Asset archived.');
     }
 
@@ -120,15 +145,21 @@ class Index extends Component
 
     public function render()
     {
+        $user = Auth::user();
+
         $assets = Asset::query()
             ->with('client')
             ->active()
+            ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('client_id', $user->permittedClients()->select('clients.id')))
             ->search($this->search)
             ->when($this->filterType, fn ($q) => $q->where('asset_type', $this->filterType))
             ->orderBy('name')
             ->paginate(20);
 
-        return view('livewire.assets.index', ['assets' => $assets])
+        return view('livewire.assets.index', [
+            'assets' => $assets,
+            'clients' => Client::active()->visibleTo($user)->orderBy('name')->get(['id', 'name']),
+        ])
             ->layout('components.layouts.app', ['header' => 'Assets']);
     }
 }

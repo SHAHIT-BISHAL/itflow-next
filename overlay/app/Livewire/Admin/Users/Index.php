@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Users;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -37,7 +38,7 @@ class Index extends Component
 
     public function edit(int $id): void
     {
-        $user = User::findOrFail($id);
+        $user = User::where('company_id', Auth::user()->company_id)->findOrFail($id);
 
         $this->editingId = $user->id;
         $this->name = $user->name;
@@ -61,7 +62,7 @@ class Index extends Component
         $role = Role::findById($data['role_id']);
 
         if ($this->editingId) {
-            $user = User::findOrFail($this->editingId);
+            $user = User::where('company_id', Auth::user()->company_id)->findOrFail($this->editingId);
             $user->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -88,7 +89,7 @@ class Index extends Component
 
     public function archive(int $id): void
     {
-        User::findOrFail($id)->update(['archived_at' => now(), 'status' => 'archived']);
+        User::where('company_id', Auth::user()->company_id)->findOrFail($id)->update(['archived_at' => now(), 'status' => 'archived']);
         session()->flash('success', 'User archived.');
     }
 
@@ -107,7 +108,7 @@ class Index extends Component
     public function render()
     {
         return view('livewire.admin.users.index', [
-            'users' => User::active()->with('roles')->orderBy('name')->paginate(15),
+            'users' => User::active()->where('company_id', Auth::user()->company_id)->with('roles')->orderBy('name')->paginate(15),
             'roles' => Role::orderBy('name')->get(),
         ])->layout('components.layouts.app', ['header' => 'Users']);
     }

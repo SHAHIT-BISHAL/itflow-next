@@ -3,6 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Show extends Component
@@ -13,6 +14,8 @@ class Show extends Component
 
     public function mount(Client $client): void
     {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
         $this->client = $client;
         $client->update(['accessed_at' => now()]);
     }

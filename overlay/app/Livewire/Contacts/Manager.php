@@ -4,6 +4,7 @@ namespace App\Livewire\Contacts;
 
 use App\Models\Client;
 use App\Models\Contact;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -35,6 +36,13 @@ class Manager extends Component
     public bool $is_billing = false;
 
     public bool $is_technical = false;
+
+    public function mount(Client $client): void
+    {
+        abort_if(! Auth::user()->canAccessClient($client), 404);
+
+        $this->client = $client;
+    }
 
     public function create(): void
     {

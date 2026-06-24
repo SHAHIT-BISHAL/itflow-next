@@ -1,10 +1,6 @@
 <div class="flex gap-6">
     {{-- Invoice body --}}
     <div class="flex-1 min-w-0 space-y-4">
-        @if (session('success'))
-            <div class="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">{{ session('success') }}</div>
-        @endif
-
         <x-ui.card>
             {{-- Invoice header --}}
             <div class="flex items-start justify-between mb-6">
@@ -15,7 +11,13 @@
                         <span class="text-xs text-slate-400">{{ $invoice->issue_date->format('d M Y') }}</span>
                     </div>
                 </div>
-                <a href="{{ route('invoices.index') }}" class="text-xs text-slate-500 hover:text-brand-700" wire:navigate>← Back</a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank"
+                       class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
+                        <x-ui.icon name="arrow-down-tray" class="h-4 w-4" /> PDF
+                    </a>
+                    <a href="{{ route('invoices.index') }}" class="text-xs text-slate-500 hover:text-brand-700" wire:navigate>← Back</a>
+                </div>
             </div>
 
             {{-- Bill to --}}
@@ -207,7 +209,7 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="secondary" wire:click="$set('showPaymentModal', false)">Cancel</x-ui.button>
-            <x-ui.button wire:click="recordPayment">Record Payment</x-ui.button>
+            <x-ui.button wire:click="recordPayment" loading="recordPayment">Record Payment</x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 </div>

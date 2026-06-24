@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->foreignId('contact_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('invoice_number')->unique();
+            $table->string('invoice_number');
             $table->string('status')->default('draft'); // draft, sent, paid, partial, overdue, void
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('tax_amount', 12, 2)->default(0);
@@ -28,6 +28,8 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->timestamps();
+
+            $table->unique(['company_id', 'invoice_number']);
         });
 
         Schema::create('invoice_items', function (Blueprint $table) {

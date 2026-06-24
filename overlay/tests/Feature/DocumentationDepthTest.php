@@ -73,6 +73,11 @@ class DocumentationDepthTest extends TestCase
             'related_type' => Asset::class,
             'related_id' => $asset->id,
         ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'subject_type' => \App\Models\Document::class,
+            'action' => 'document.created',
+        ]);
     }
 
     public function test_password_reveal_is_audited(): void
@@ -93,6 +98,13 @@ class DocumentationDepthTest extends TestCase
             'client_id' => $this->client->id,
             'password_id' => $password->id,
             'action' => 'reveal',
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->client->company_id,
+            'subject_type' => Password::class,
+            'subject_id' => $password->id,
+            'action' => 'password.reveal',
         ]);
     }
 }

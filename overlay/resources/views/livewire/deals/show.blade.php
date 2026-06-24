@@ -136,7 +136,7 @@
                         @endforeach
                     </select>
                 </div>
-                <x-ui.button wire:click="updateMeta" class="w-full justify-center">Save Changes</x-ui.button>
+                <x-ui.button wire:click="updateMeta" loading="updateMeta" class="w-full justify-center">Save Changes</x-ui.button>
             </div>
         </x-ui.card>
 
@@ -208,7 +208,7 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="secondary" wire:click="$set('showActivityModal', false)">Cancel</x-ui.button>
-            <x-ui.button wire:click="saveActivity">Save</x-ui.button>
+            <x-ui.button wire:click="saveActivity" loading="saveActivity">Save</x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 </div>

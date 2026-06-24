@@ -6,7 +6,32 @@ use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int $client_id
+ * @property int|null $location_id
+ * @property string $name
+ * @property string $asset_type
+ * @property string|null $manufacturer
+ * @property string|null $model
+ * @property string|null $serial_number
+ * @property string|null $ip_address
+ * @property string|null $mac_address
+ * @property string|null $os
+ * @property string|null $os_version
+ * @property \Illuminate\Support\Carbon|null $purchased_at
+ * @property \Illuminate\Support\Carbon|null $warranty_expires_at
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read Location|null $location
+ * @property-read string $warranty_status
+ */
 class Asset extends Model
 {
     use HasFactory, BelongsToCompany, HasTags;
@@ -23,12 +48,12 @@ class Asset extends Model
         'archived_at' => 'datetime',
     ];
 
-    public function client()
+    public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
-    public function location()
+    public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
     }

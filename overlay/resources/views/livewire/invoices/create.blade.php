@@ -109,15 +109,15 @@
                 <div class="mt-4 border-t border-slate-100 pt-4 space-y-1 text-sm">
                     <div class="flex justify-between text-slate-600">
                         <span>Subtotal</span>
-                        <span>${{ number_format($subtotal, 2) }}</span>
+                        <span>${{ number_format($this->subtotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-slate-600">
                         <span>Tax</span>
-                        <span>${{ number_format($taxTotal, 2) }}</span>
+                        <span>${{ number_format($this->taxTotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-base font-bold text-slate-900 pt-1 border-t border-slate-200">
                         <span>Total</span>
-                        <span>${{ number_format($total, 2) }}</span>
+                        <span>${{ number_format($this->total, 2) }}</span>
                     </div>
                 </div>
             </x-ui.card>
@@ -145,10 +145,10 @@
         <div class="w-52 shrink-0 space-y-3">
             <x-ui.card>
                 <div class="space-y-2">
-                    <x-ui.button wire:click="save('send')" class="w-full justify-center">
+                    <x-ui.button wire:click="save('send')" loading="save" class="w-full justify-center">
                         Save & Mark Sent
                     </x-ui.button>
-                    <x-ui.button wire:click="save('draft')" variant="secondary" class="w-full justify-center">
+                    <x-ui.button wire:click="save('draft')" loading="save" variant="secondary" class="w-full justify-center">
                         Save as Draft
                     </x-ui.button>
                     <a href="{{ route('invoices.index') }}" wire:navigate class="block text-center text-sm text-slate-500 hover:text-slate-700 pt-1">

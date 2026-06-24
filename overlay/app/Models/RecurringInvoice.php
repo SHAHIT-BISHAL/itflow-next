@@ -3,11 +3,30 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int $client_id
+ * @property string $frequency
+ * @property \Illuminate\Support\Carbon $next_run_at
+ * @property \Illuminate\Support\Carbon|null $last_run_at
+ * @property bool $is_active
+ * @property string|null $notes
+ * @property string $currency
+ * @property int $net_terms
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, RecurringInvoiceItem> $items
+ */
 class RecurringInvoice extends Model
 {
-    use BelongsToCompany;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'company_id', 'client_id', 'frequency', 'next_run_at', 'last_run_at',
@@ -20,8 +39,8 @@ class RecurringInvoice extends Model
         'is_active'   => 'boolean',
     ];
 
-    public function client() { return $this->belongsTo(Client::class); }
-    public function items()  { return $this->hasMany(RecurringInvoiceItem::class)->orderBy('sort_order'); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function items(): HasMany { return $this->hasMany(RecurringInvoiceItem::class)->orderBy('sort_order'); }
 
     public function generateInvoice(): Invoice
     {

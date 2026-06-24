@@ -1,104 +1,86 @@
-<div>
-    {{-- Stats bar --}}
-    <div class="mb-4 grid grid-cols-3 gap-4">
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Open Deals</p>
-            <p class="mt-1 text-2xl font-semibold text-slate-900">{{ $openCount }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Pipeline Value</p>
-            <p class="mt-1 text-2xl font-semibold text-slate-900">${{ number_format($totalValue, 0) }}</p>
-        </x-ui.card>
-        <x-ui.card>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Pipelines</p>
-            <p class="mt-1 text-2xl font-semibold text-slate-900">{{ $pipelines->count() }}</p>
-        </x-ui.card>
+<div class="space-y-5">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <x-ui.metric-card label="Open Deals" :value="$openCount" icon="funnel" color="violet" />
+        <x-ui.metric-card label="Pipeline Value" :value="'$' . number_format($totalValue, 0)" icon="banknotes" color="emerald" />
+        <x-ui.metric-card label="Pipelines" :value="$pipelines->count()" icon="chart-bar" color="sky" />
     </div>
 
-    {{-- Toolbar --}}
-    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-1 gap-2 flex-wrap">
-            {{-- View toggle --}}
-            <div class="flex rounded-lg border border-slate-200 overflow-hidden">
-                <button wire:click="$set('view','list')"
-                    class="px-3 py-1.5 text-sm {{ $view === 'list' ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
-                    List
-                </button>
-                <button wire:click="$set('view','kanban')"
-                    class="px-3 py-1.5 text-sm {{ $view === 'kanban' ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
-                    Kanban
-                </button>
-            </div>
-
-            @if ($view === 'list')
-                <div class="relative flex-1 max-w-xs">
-                    <x-ui.icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search deals…"
-                        class="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none" />
-                </div>
-                <select wire:model.live="status"
-                    class="rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none">
-                    <option value="open">Open</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
-                    <option value="">All</option>
-                </select>
-            @else
-                {{-- Pipeline selector for kanban --}}
-                @foreach ($pipelines as $pipeline)
-                    <button wire:click="$set('pipelineId', {{ $pipeline->id }})"
-                        class="rounded-lg px-3 py-1.5 text-sm border transition
-                        {{ $pipelineId === $pipeline->id ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50' }}">
-                        {{ $pipeline->name }}
+    <x-ui.toolbar>
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <div class="flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+                    <button wire:click="$set('view','list')"
+                        class="px-3 py-2 text-sm font-semibold {{ $view === 'list' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                        List
                     </button>
-                @endforeach
-            @endif
-        </div>
-        <x-ui.button wire:click="openModal">
-            <x-ui.icon name="plus" class="h-4 w-4 mr-1" /> New Deal
-        </x-ui.button>
-    </div>
+                    <button wire:click="$set('view','kanban')"
+                        class="border-l border-slate-200 px-3 py-2 text-sm font-semibold {{ $view === 'kanban' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                        Kanban
+                    </button>
+                </div>
 
-    {{-- List view --}}
+                @if ($view === 'list')
+                    <div class="relative max-w-sm flex-1">
+                        <x-ui.icon name="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search deals..."
+                            class="w-full rounded-md border border-slate-200 py-2 pl-9 pr-3 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500" />
+                    </div>
+                    <select wire:model.live="status"
+                        class="rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500">
+                        <option value="open">Open</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                        <option value="">All</option>
+                    </select>
+                @else
+                    @foreach ($pipelines as $pipeline)
+                        <button wire:click="$set('pipelineId', {{ $pipeline->id }})"
+                            class="rounded-md border px-3 py-2 text-sm font-semibold shadow-sm transition
+                            {{ $pipelineId === $pipeline->id ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
+                            {{ $pipeline->name }}
+                        </button>
+                    @endforeach
+                @endif
+            </div>
+            <x-ui.button wire:click="openModal">
+                <x-ui.icon name="plus" class="h-4 w-4" /> New Deal
+            </x-ui.button>
+        </div>
+    </x-ui.toolbar>
+
     @if ($view === 'list')
         <x-ui.card>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
-                            <th class="pb-3 pr-4">Deal</th>
-                            <th class="pb-3 pr-4">Client</th>
-                            <th class="pb-3 pr-4">Stage</th>
-                            <th class="pb-3 pr-4">Value</th>
-                            <th class="pb-3 pr-4">Status</th>
-                            <th class="pb-3 pr-4">Assigned</th>
-                            <th class="pb-3">Close Date</th>
+                        <tr class="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-slate-500">
+                            <th class="px-4 py-3">Deal</th>
+                            <th class="px-4 py-3">Client</th>
+                            <th class="px-4 py-3">Stage</th>
+                            <th class="px-4 py-3">Value</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Assigned</th>
+                            <th class="px-4 py-3 text-right">Close Date</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-100">
                         @forelse ($deals as $deal)
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 pr-4">
-                                    <a href="{{ route('deals.show', $deal) }}" class="font-medium text-brand-700 hover:underline" wire:navigate>
+                            <tr class="hover:bg-slate-50/80">
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('deals.show', $deal) }}" class="font-semibold text-slate-950 hover:text-brand-700" wire:navigate>
                                         {{ $deal->name }}
                                     </a>
                                 </td>
-                                <td class="py-3 pr-4 text-slate-600">{{ $deal->client?->name ?? '—' }}</td>
-                                <td class="py-3 pr-4">
-                                    <x-ui.badge :color="$deal->stage->color ?? 'gray'">{{ $deal->stage->name }}</x-ui.badge>
-                                </td>
-                                <td class="py-3 pr-4 font-medium text-slate-900">${{ $deal->formatted_value }}</td>
-                                <td class="py-3 pr-4">
-                                    <x-ui.badge :color="$deal->status_color">{{ ucfirst($deal->status) }}</x-ui.badge>
-                                </td>
-                                <td class="py-3 pr-4 text-slate-600">{{ $deal->assignee?->name ?? '—' }}</td>
-                                <td class="py-3 text-slate-400 text-xs">
-                                    {{ $deal->expected_close_date?->format('d M Y') ?? '—' }}
-                                </td>
+                                <td class="px-4 py-3 text-slate-600">{{ $deal->client?->name ?? 'No client' }}</td>
+                                <td class="px-4 py-3"><x-ui.badge :color="$deal->stage->color ?? 'gray'">{{ $deal->stage->name }}</x-ui.badge></td>
+                                <td class="px-4 py-3 font-semibold text-slate-950">${{ $deal->formatted_value }}</td>
+                                <td class="px-4 py-3"><x-ui.badge :color="$deal->status_color">{{ ucfirst($deal->status) }}</x-ui.badge></td>
+                                <td class="px-4 py-3 text-slate-600">{{ $deal->assignee?->name ?? 'Unassigned' }}</td>
+                                <td class="px-4 py-3 text-right text-xs text-slate-500">{{ $deal->expected_close_date?->format('d M Y') ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-400">No deals found.</td>
+                                <td colspan="7" class="px-4 py-10 text-center text-slate-400">No deals found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -108,8 +90,6 @@
                 <div class="mt-4">{{ $deals->links() }}</div>
             @endif
         </x-ui.card>
-
-    {{-- Kanban view --}}
     @else
         <div class="flex gap-4 overflow-x-auto pb-4">
             @foreach ($activePipeline?->stages ?? [] as $stage)
@@ -117,105 +97,84 @@
                     $stageDeals = $kanbanDeals[$stage->id] ?? collect();
                     $stageValue = $stageDeals->sum('value');
                 @endphp
-                <div class="w-72 shrink-0">
-                    <div class="mb-2 flex items-center justify-between px-1">
+                <section class="w-80 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                         <div class="flex items-center gap-2">
                             <x-ui.badge :color="$stage->color">{{ $stage->name }}</x-ui.badge>
-                            <span class="text-xs text-slate-400">{{ $stageDeals->count() }}</span>
+                            <span class="text-xs font-semibold text-slate-400">{{ $stageDeals->count() }}</span>
                         </div>
-                        <span class="text-xs font-medium text-slate-500">${{ number_format($stageValue, 0) }}</span>
+                        <span class="text-xs font-semibold text-slate-500">${{ number_format($stageValue, 0) }}</span>
                     </div>
-                    <div class="space-y-2 rounded-lg bg-slate-50 p-2 min-h-32">
-                        @foreach ($stageDeals as $deal)
-                            <div class="rounded-lg bg-white border border-slate-200 p-3 shadow-sm hover:shadow-md transition">
-                                <a href="{{ route('deals.show', $deal) }}" class="font-medium text-slate-900 hover:text-brand-700 text-sm block mb-1" wire:navigate>
+                    <div class="min-h-40 space-y-3 bg-slate-50/70 p-3">
+                        @forelse ($stageDeals as $deal)
+                            <article class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                                <a href="{{ route('deals.show', $deal) }}" class="block text-sm font-semibold text-slate-950 hover:text-brand-700" wire:navigate>
                                     {{ $deal->name }}
                                 </a>
-                                <p class="text-xs text-slate-500 mb-2">{{ $deal->client?->name ?? 'No client' }}</p>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-semibold text-slate-700">${{ $deal->formatted_value }}</span>
+                                <p class="mt-1 text-xs text-slate-500">{{ $deal->client?->name ?? 'No client' }}</p>
+                                <div class="mt-3 flex items-center justify-between">
+                                    <span class="text-sm font-semibold text-slate-800">${{ $deal->formatted_value }}</span>
                                     @if ($deal->assignee)
-                                        <span class="h-6 w-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">
+                                        <span class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-950 text-xs font-bold text-white">
                                             {{ strtoupper(substr($deal->assignee->name, 0, 1)) }}
                                         </span>
                                     @endif
                                 </div>
                                 @if ($deal->expected_close_date)
-                                    <p class="text-xs text-slate-400 mt-1">Close: {{ $deal->expected_close_date->format('d M Y') }}</p>
+                                    <p class="mt-2 text-xs text-slate-400">Close: {{ $deal->expected_close_date->format('d M Y') }}</p>
                                 @endif
+                            </article>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-slate-300 bg-white/70 p-6 text-center text-sm text-slate-400">
+                                No deals in this stage.
                             </div>
-                        @endforeach
+                        @endforelse
                     </div>
-                </div>
+                </section>
             @endforeach
         </div>
     @endif
 
-    {{-- New Deal Modal --}}
     <x-ui.modal :show="$showModal" title="New Deal" wire:close="$set('showModal', false)">
         <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Deal Name <span class="text-red-500">*</span></label>
-                <x-ui.input wire:model="form.name" type="text" placeholder="e.g. Acme — Network Upgrade" />
-                @error('form.name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            <x-ui.input wire:model="form.name" type="text" label="Deal Name" placeholder="e.g. Acme - Network Upgrade" :error="$errors->first('form.name')" />
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-ui.input wire:model="form.client_id" type="select" label="Client">
+                    <option value="">No client</option>
+                    @foreach ($clients as $client)
+                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                    @endforeach
+                </x-ui.input>
+                <x-ui.input wire:model="form.assigned_to" type="select" label="Assign to">
+                    <option value="">Unassigned</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @endforeach
+                </x-ui.input>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Client</label>
-                    <select wire:model="form.client_id" class="w-full rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none">
-                        <option value="">No client</option>
-                        @foreach ($clients as $client)
-                            <option value="{{ $client->id }}">{{ $client->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Assign to</label>
-                    <select wire:model="form.assigned_to" class="w-full rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none">
-                        <option value="">Unassigned</option>
-                        @foreach ($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-ui.input wire:model.live="form.pipeline_id" type="select" label="Pipeline" :error="$errors->first('form.pipeline_id')">
+                    <option value="">Select pipeline</option>
+                    @foreach ($pipelines as $p)
+                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                    @endforeach
+                </x-ui.input>
+                <x-ui.input wire:model="form.stage_id" type="select" label="Stage" :error="$errors->first('form.stage_id')">
+                    <option value="">Select stage</option>
+                    @foreach ($stageOptions as $stage)
+                        <option value="{{ $stage['id'] }}">{{ $stage['name'] }}</option>
+                    @endforeach
+                </x-ui.input>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Pipeline <span class="text-red-500">*</span></label>
-                    <select wire:model.live="form.pipeline_id" class="w-full rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none">
-                        <option value="">Select pipeline</option>
-                        @foreach ($pipelines as $p)
-                            <option value="{{ $p->id }}">{{ $p->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.pipeline_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Stage <span class="text-red-500">*</span></label>
-                    <select wire:model="form.stage_id" class="w-full rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none">
-                        <option value="">Select stage</option>
-                        @foreach ($stageOptions as $stage)
-                            <option value="{{ $stage['id'] }}">{{ $stage['name'] }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.stage_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-ui.input wire:model="form.value" type="number" label="Value ($)" placeholder="0.00" />
+                <x-ui.input wire:model="form.expected_close_date" type="date" label="Expected Close" />
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Value ($)</label>
-                    <x-ui.input wire:model="form.value" type="number" placeholder="0.00" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Expected Close</label>
-                    <x-ui.input wire:model="form.expected_close_date" type="date" />
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-                <textarea wire:model="form.notes" rows="3"
-                    class="w-full rounded-lg border border-slate-200 py-2 px-3 text-sm focus:border-brand-500 focus:outline-none"></textarea>
-            </div>
+
+            <x-ui.input wire:model="form.notes" type="textarea" label="Notes" rows="3" />
         </div>
         <x-slot:footer>
             <x-ui.button variant="secondary" wire:click="$set('showModal', false)">Cancel</x-ui.button>

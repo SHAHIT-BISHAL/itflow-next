@@ -4,14 +4,41 @@ namespace App\Models;
 
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $client_id
+ * @property int|null $location_id
+ * @property string $name
+ * @property string|null $title
+ * @property string|null $department
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $phone_extension
+ * @property string|null $mobile
+ * @property string|null $photo
+ * @property bool $is_primary
+ * @property bool $is_important
+ * @property bool $is_billing
+ * @property bool $is_technical
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $accessed_at
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Client $client
+ * @property-read Location|null $location
+ */
 class Contact extends Model implements Authenticatable
 {
-    use HasTags, AuthenticatableTrait, Authorizable, Notifiable;
+    use HasFactory, HasTags, AuthenticatableTrait, Authorizable, Notifiable;
 
     protected $fillable = [
         'client_id', 'location_id', 'name', 'title', 'department', 'email', 'phone',
@@ -32,12 +59,12 @@ class Contact extends Model implements Authenticatable
         'password' => 'hashed',
     ];
 
-    public function client()
+    public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
-    public function location()
+    public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
     }

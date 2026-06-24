@@ -7,16 +7,15 @@
     </div>
 
     <x-ui.card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <x-ui.table>
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-2">Domain</th>
-                        <th class="px-3 py-2">Registrar</th>
-                        <th class="px-3 py-2">Expires</th>
-                        <th class="px-3 py-2">SSL Expires</th>
-                        <th class="px-3 py-2">Auto-renew</th>
-                        <th class="px-3 py-2"></th>
+                        <x-ui.th>Domain</x-ui.th>
+                        <x-ui.th>Registrar</x-ui.th>
+                        <x-ui.th>Expires</x-ui.th>
+                        <x-ui.th>SSL Expires</x-ui.th>
+                        <x-ui.th>Auto-renew</x-ui.th>
+                        <x-ui.th />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -68,8 +67,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.table>
     </x-ui.card>
 
     @include('livewire.domains._form-modal')

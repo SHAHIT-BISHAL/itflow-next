@@ -2,13 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_reply_id
+ * @property string $filename
+ * @property string $path
+ * @property string|null $mime_type
+ * @property int $size
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read TicketReply $reply
+ * @property-read string $formatted_size
+ */
 class TicketAttachment extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['ticket_reply_id', 'filename', 'path', 'mime_type', 'size'];
 
-    public function reply() { return $this->belongsTo(TicketReply::class, 'ticket_reply_id'); }
+    public function reply(): BelongsTo { return $this->belongsTo(TicketReply::class, 'ticket_reply_id'); }
 
     public function getFormattedSizeAttribute(): string
     {

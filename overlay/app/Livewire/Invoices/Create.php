@@ -5,7 +5,10 @@ namespace App\Livewire\Invoices;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Invoice;
+use App\Services\AuditLogger;
+use App\Services\NumberGenerator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Create extends Component
@@ -27,24 +30,56 @@ class Create extends Component
 
     public array $contacts = [];
 
-    protected array $rules = [
-        'form.client_id'      => 'required|exists:clients,id',
-        'form.invoice_number' => 'required|string|max:50',
-        'form.issue_date'     => 'required|date',
-        'form.due_date'       => 'required|date|after_or_equal:form.issue_date',
-        'form.currency'       => 'required|string|size:3',
-        'items'               => 'required|array|min:1',
-        'items.*.description' => 'required|string',
-        'items.*.quantity'    => 'required|numeric|min:0.01',
-        'items.*.unit_price'  => 'required|numeric|min:0',
-        'items.*.tax_rate'    => 'nullable|numeric|min:0|max:100',
-    ];
+    public bool $usingGeneratedInvoiceNumber = false;
+
+    public ?string $generatedInvoicePreview = null;
+
+    protected function rules(): array
+    {
+        $companyId = Auth::user()->company_id;
+        $user = Auth::user();
+
+        return [
+            'form.client_id'      => [
+                'required',
+                Rule::exists('clients', 'id')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->whereNull('archived_at')
+                    ->when($user->hasClientRestrictions(), fn ($q) => $q->whereIn('id', $user->permittedClients()->select('clients.id')))),
+            ],
+            'form.contact_id'     => [
+                'nullable',
+                Rule::exists('contacts', 'id')->where(fn ($query) => $query
+                    ->where('client_id', $this->form['client_id'] ?: 0)
+                    ->whereNull('archived_at')),
+            ],
+            'form.invoice_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('invoices', 'invoice_number')
+                    ->where(fn ($query) => $query->where('company_id', $companyId))
+                    ->ignore($this->invoiceId),
+            ],
+            'form.issue_date'     => 'required|date',
+            'form.due_date'       => 'required|date|after_or_equal:form.issue_date',
+            'form.currency'       => 'required|string|size:3',
+            'items'               => 'required|array|min:1',
+            'items.*.description' => 'required|string',
+            'items.*.quantity'    => 'required|numeric|min:0.01',
+            'items.*.unit_price'  => 'required|numeric|min:0',
+            'items.*.tax_rate'    => 'nullable|numeric|min:0|max:100',
+        ];
+    }
 
     public function mount(?Invoice $invoice = null): void
     {
         $companyId = Auth::user()->company_id;
 
         if ($invoice && $invoice->exists) {
+            abort_if($invoice->company_id !== $companyId, 404);
+            abort_if(! Auth::user()->canAccessClient($invoice->client), 404);
+
             $this->invoiceId = $invoice->id;
             $this->form = $invoice->only(['client_id', 'contact_id', 'invoice_number', 'currency', 'notes', 'terms'])
                 + ['issue_date' => $invoice->issue_date->format('Y-m-d'), 'due_date' => $invoice->due_date->format('Y-m-d')];
@@ -56,19 +91,35 @@ class Create extends Component
             ])->toArray();
             $this->loadContacts();
         } else {
-            $this->form['invoice_number'] = Invoice::nextNumber($companyId);
+            $this->generatedInvoicePreview = app(NumberGenerator::class)->preview($companyId, 'invoice');
+            $this->form['invoice_number'] = $this->generatedInvoicePreview;
+            $this->usingGeneratedInvoiceNumber = true;
             $this->form['issue_date']     = today()->format('Y-m-d');
             $this->form['due_date']       = today()->addDays(30)->format('Y-m-d');
             $this->addItem();
         }
     }
 
-    public function updatedFormClientId(): void { $this->loadContacts(); }
+    public function updatedFormInvoiceNumber(): void
+    {
+        $this->usingGeneratedInvoiceNumber = false;
+    }
+
+    public function updatedFormClientId(): void
+    {
+        $this->form['contact_id'] = '';
+        $this->loadContacts();
+    }
 
     public function loadContacts(): void
     {
         $this->contacts = $this->form['client_id']
-            ? Contact::where('client_id', $this->form['client_id'])->orderBy('name')->get(['id', 'name'])->toArray()
+            ? Contact::active()
+                ->where('client_id', $this->form['client_id'])
+                ->whereHas('client', fn ($query) => $query->visibleTo(Auth::user()))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->toArray()
             : [];
     }
 
@@ -103,6 +154,10 @@ class Create extends Component
 
         $companyId = Auth::user()->company_id;
 
+        if (! $this->invoiceId && $this->usingGeneratedInvoiceNumber && $this->form['invoice_number'] === $this->generatedInvoicePreview) {
+            $this->form['invoice_number'] = Invoice::nextNumber($companyId);
+        }
+
         $invoiceData = array_merge($this->form, [
             'company_id' => $companyId,
             'status'     => $action === 'send' ? 'sent' : 'draft',
@@ -112,11 +167,15 @@ class Create extends Component
         ]);
 
         if ($this->invoiceId) {
-            $invoice = Invoice::findOrFail($this->invoiceId);
+            $invoice = Invoice::where('company_id', $companyId)->findOrFail($this->invoiceId);
+            abort_if(! Auth::user()->canAccessClient($invoice->client), 404);
+
+            $before = AuditLogger::snapshot($invoice);
             $invoice->update($invoiceData);
             $invoice->items()->delete();
         } else {
             $invoice = Invoice::create($invoiceData);
+            $before = null;
         }
 
         foreach ($this->items as $i => $item) {
@@ -132,6 +191,20 @@ class Create extends Component
         }
 
         $invoice->recalculate();
+        AuditLogger::record(
+            $this->invoiceId ? 'invoice.updated' : 'invoice.created',
+            $invoice,
+            $this->invoiceId ? 'Invoice updated.' : 'Invoice created.',
+            $before,
+            AuditLogger::snapshot($invoice),
+        );
+
+        session()->flash('toast', [
+            'message' => $this->invoiceId
+                ? "Invoice {$invoice->invoice_number} updated."
+                : "Invoice {$invoice->invoice_number} created" . ($action === 'send' ? ' and marked sent.' : '.'),
+            'type'    => 'success',
+        ]);
 
         $this->redirect(route('invoices.show', $invoice), navigate: true);
     }
@@ -139,7 +212,7 @@ class Create extends Component
     public function render()
     {
         return view('livewire.invoices.create', [
-            'clients'  => Client::active()->where('company_id', Auth::user()->company_id)->orderBy('name')->get(['id', 'name']),
+            'clients'  => Client::active()->where('company_id', Auth::user()->company_id)->visibleTo(Auth::user())->orderBy('name')->get(['id', 'name']),
             'contacts' => $this->contacts,
         ])->layout('components.layouts.app', ['header' => $this->invoiceId ? 'Edit Invoice' : 'New Invoice']);
     }

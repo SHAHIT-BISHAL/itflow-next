@@ -3,11 +3,42 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $client_id
+ * @property int|null $contact_id
+ * @property int $pipeline_id
+ * @property int $stage_id
+ * @property int|null $assigned_to
+ * @property string $name
+ * @property string $value
+ * @property string $currency
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $expected_close_date
+ * @property \Illuminate\Support\Carbon|null $closed_at
+ * @property string|null $lost_reason
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Pipeline $pipeline
+ * @property-read PipelineStage $stage
+ * @property-read Client|null $client
+ * @property-read Contact|null $contact
+ * @property-read User|null $assignee
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Activity> $activities
+ * @property-read string $status_color
+ * @property-read string $formatted_value
+ */
 class Deal extends Model
 {
-    use BelongsToCompany;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'company_id', 'client_id', 'contact_id', 'pipeline_id', 'stage_id',
@@ -22,12 +53,12 @@ class Deal extends Model
         'archived_at'         => 'datetime',
     ];
 
-    public function pipeline()   { return $this->belongsTo(Pipeline::class); }
-    public function stage()      { return $this->belongsTo(PipelineStage::class, 'stage_id'); }
-    public function client()     { return $this->belongsTo(Client::class); }
-    public function contact()    { return $this->belongsTo(Contact::class); }
-    public function assignee()   { return $this->belongsTo(User::class, 'assigned_to'); }
-    public function activities() { return $this->hasMany(Activity::class)->orderBy('created_at', 'desc'); }
+    public function pipeline(): BelongsTo { return $this->belongsTo(Pipeline::class); }
+    public function stage(): BelongsTo { return $this->belongsTo(PipelineStage::class, 'stage_id'); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
+    public function contact(): BelongsTo { return $this->belongsTo(Contact::class); }
+    public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
+    public function activities(): HasMany { return $this->hasMany(Activity::class)->orderBy('created_at', 'desc'); }
 
     public function scopeActive($query) { return $query->whereNull('archived_at'); }
     public function scopeOpen($query)   { return $query->where('status', 'open'); }

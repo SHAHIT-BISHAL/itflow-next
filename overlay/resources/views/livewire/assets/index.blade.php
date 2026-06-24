@@ -21,18 +21,17 @@
     </div>
 
     <x-ui.card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <x-ui.table>
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-2">Name</th>
-                        <th class="px-3 py-2">Type</th>
-                        <th class="px-3 py-2">Client</th>
-                        <th class="px-3 py-2">Make / Model</th>
-                        <th class="px-3 py-2">Serial</th>
-                        <th class="px-3 py-2">IP</th>
-                        <th class="px-3 py-2">Warranty</th>
-                        <th class="px-3 py-2"></th>
+                        <x-ui.th>Name</x-ui.th>
+                        <x-ui.th>Type</x-ui.th>
+                        <x-ui.th>Client</x-ui.th>
+                        <x-ui.th>Make / Model</x-ui.th>
+                        <x-ui.th>Serial</x-ui.th>
+                        <x-ui.th>IP</x-ui.th>
+                        <x-ui.th>Warranty</x-ui.th>
+                        <x-ui.th />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -96,8 +95,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.table>
         <div class="mt-4">{{ $assets->links() }}</div>
     </x-ui.card>
 
@@ -105,6 +103,20 @@
         <form wire:submit="save" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <x-ui.input name="name" label="Name" wire:model="name" :error="$errors->first('name')" class="col-span-2" />
+
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Client</label>
+                    <select wire:model="client_id" name="client_id"
+                            class="block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm">
+                        <option value="">Select client</option>
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('client_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>

@@ -66,4 +66,26 @@ class ClientManagementTest extends TestCase
 
         $this->assertNotNull($client->refresh()->archived_at);
     }
+
+    public function test_restricted_user_can_only_view_permitted_clients(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $company = Company::create(['name' => 'Restricted Co']);
+        $allowed = Client::factory()->create(['company_id' => $company->id, 'name' => 'Allowed Client']);
+        $blocked = Client::factory()->create(['company_id' => $company->id, 'name' => 'Blocked Client']);
+
+        $user = User::factory()->create(['company_id' => $company->id]);
+        $user->assignRole('Technician');
+        $user->permittedClients()->attach($allowed->id);
+
+        $this->actingAs($user);
+
+        $this->get(route('clients.show', $allowed))->assertOk();
+        $this->get(route('clients.show', $blocked))->assertNotFound();
+
+        Livewire::test(ClientsIndex::class)
+            ->assertSee('Allowed Client')
+            ->assertDontSee('Blocked Client');
+    }
 }
